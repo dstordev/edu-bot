@@ -22,5 +22,11 @@ class GroupRepository:
         )
         return result.scalar()
 
+    async def find_by_token(self, token: str) -> Group | None:
+        result = await self.async_session.execute(
+            select(Group).where(Group.token == token)
+        )
+        return result.scalar()
+
     async def create(self):
         pass

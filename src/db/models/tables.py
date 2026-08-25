@@ -11,6 +11,7 @@ from sqlalchemy import (
     TypeDecorator,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
@@ -121,6 +122,9 @@ class Group(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(15), unique=True)
+    token: Mapped[str] = mapped_column(
+        String(5), unique=True, server_default=text("generate_group_token()")
+    )
     created_at: Mapped[datetime] = (
         mapped_column(  # TODO: удалить колонку, так как нет смысла знать эту информацию
             DateTime(timezone=True), server_default=func.now()

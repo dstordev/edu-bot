@@ -31,7 +31,8 @@ async def command_start_handler(
         return
 
     await state.set_state(StartForm.group)
-    await wait_group_window(groups).answer_window(event)
+    # TODO: Отправлять окно о том, что нужно ввести токен группы а не выбирать ее
+    await wait_group_window().answer_window(event)
 
 
 @unregistered_router.message(StartForm.group, F.text)
@@ -40,12 +41,12 @@ async def group_selection_handler(
 ):
     token: str = event.text.strip()  # pyright: ignore[reportOptionalMemberAccess]
 
-    if (group_token := await dbrepositories.group_token.find(token)) is None:
+    if (group := await dbrepositories.group.find_by_token(token)) is None:
         return await event.answer(
             b("😿 Такого токена не существует, перепроверьте правильность набора")
         )
 
-    await state.set_data({"group_id": group_token.group_id})
+    await state.set_data({"group_id": group.id})
     await state.set_state(StartForm.full_name)
     await wait_full_name_window().answer_window(event)
 
