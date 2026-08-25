@@ -44,6 +44,8 @@ services:
       - .env
     environment:
       - DB_HOST=db
+    networks:
+      - app_net
     depends_on:
       db:
         condition: service_healthy
