@@ -11,6 +11,7 @@ from telegram_bot.states import StartForm
 from telegram_bot.utils.html_format import b
 from telegram_bot.windows.registered import start_window
 from telegram_bot.windows.unregistered import (
+    not_found_groups_window,
     wait_full_name_window,
     wait_group_window,
 )
@@ -24,6 +25,10 @@ async def command_start_handler(
     event: Message | CallbackQuery, state: FSMContext, dbrepositories: DBRepositories
 ) -> None:
     groups = await dbrepositories.group.get_groups()
+
+    if len(groups) == 0:
+        await not_found_groups_window().answer_window(event)
+        return
 
     await state.set_state(StartForm.group)
     await wait_group_window(groups).answer_window(event)

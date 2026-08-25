@@ -17,3 +17,7 @@ def wait_group_window(groups: list[Group]):
     builder.adjust(1)
 
     return InfoWindow(b("✏️ Выберите свою группу ниже:"), builder.as_markup())
+
+
+def not_found_groups_window():
+    return InfoWindow(b("🐱 Группы еще не указаны, вернитесь немного позже"))
