@@ -11,7 +11,7 @@ from collections.abc import Sequence
 import sqlalchemy as sa
 
 from alembic import op
-from src.db.models.tables import TIME_HM
+from db.models.tables import TIME_HM
 
 # revision identifiers, used by Alembic.
 revision: str = "2437aab657c4"

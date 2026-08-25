@@ -14,7 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
-from src.db.models.base import Base
+from db.models.base import Base
 
 
 class TIME_HM(TypeDecorator):
