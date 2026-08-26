@@ -42,7 +42,9 @@ async def group_selection_handler(
 
     if (group := await dbrepositories.group.find_by_token(token)) is None:
         return await event.answer(
-            b("😿 Такого токена не существует, перепроверьте правильность набора")
+            b(
+                "🐈️ Этот код мне не знаком, перепроверьте правильность набора и попробуйте еще раз:"
+            )
         )
 
     await state.set_data({"group_id": group.id})
