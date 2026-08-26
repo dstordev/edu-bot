@@ -31,7 +31,6 @@ async def command_start_handler(
         return
 
     await state.set_state(StartForm.group)
-    # TODO: Отправлять окно о том, что нужно ввести токен группы а не выбирать ее
     await wait_group_window().answer_window(event)
 
 

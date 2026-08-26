@@ -125,10 +125,8 @@ class Group(Base):
     token: Mapped[str] = mapped_column(
         String(5), unique=True, server_default=text("generate_group_token()")
     )
-    created_at: Mapped[datetime] = (
-        mapped_column(  # TODO: удалить колонку, так как нет смысла знать эту информацию
-            DateTime(timezone=True), server_default=func.now()
-        )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )
 
 
@@ -137,10 +135,8 @@ class AcademicSubject(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(30), unique=True)
-    created_at: Mapped[datetime] = (
-        mapped_column(  # TODO: удалить колонку, так как нет смысла знать эту информацию
-            DateTime(timezone=True), server_default=func.now()
-        )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
     )
 
 

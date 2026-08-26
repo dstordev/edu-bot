@@ -18,7 +18,6 @@ logger.info(f"Версия приложения: {VERSION}")
 
 
 async def main() -> None:
-    # TODO: Перенести создание async_session и engine в инициализацию класса DBRepositories?
     logger.debug("Настраиваю подключение к REDIS...")
     redis = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 
