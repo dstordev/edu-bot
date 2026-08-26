@@ -1,0 +1,15 @@
+[project]
+name = "edu-bot"
+version = "0.1.0"
+requires-python = ">=3.14.6"
+dependencies = [
+    "aiogram==3.31.0",
+    "sqlalchemy==2.0.52",
+    "alembic==1.19.1",
+    "loguru==0.7.3",
+    "apscheduler==3.11.3",
+    "pytest-asyncio==1.4.0",
+    "asyncpg==0.31.0",
+    "pydantic-settings==2.14.2",
+    "redis==8.1.0",
+]
