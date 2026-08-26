@@ -1,6 +1,6 @@
-aiogram~=3.30.0
-sqlalchemy~=2.0.51
-alembic~=1.19.0
+aiogram~=3.31.0
+sqlalchemy~=2.0.52
+alembic~=1.19.1
 loguru~=0.7.3
 apscheduler~=3.11.3
 pytest-asyncio~=1.4.0
