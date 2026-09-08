@@ -3,7 +3,7 @@ from datetime import date
 from aiogram.types import InlineKeyboardButton, InputMediaUnion
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.models.tables import AcademicSubject, Homework
+from db.models.tables import AcademicSubject, Group, Homework
 from telegram_bot.buttons.homework import (
     complete_homework_b,
     homework_add_b,
@@ -23,6 +23,7 @@ from telegram_bot.buttons.other import (
     skip_b,
     start_b,
 )
+from telegram_bot.buttons.unregistered import group_button
 from telegram_bot.utils.html_format import b, blockquote, code
 from telegram_bot.windows.info_window import InfoWindow
 from utils.datetime_format import DATE_FORMAT
@@ -73,6 +74,22 @@ def homework_assignment_date_window(*, back_btn: InlineKeyboardButton):
     return InfoWindow(
         b("✏️ Введите дату, когда задали задание:"),
         inline_keyboard_markup=builder.as_markup(),
+    )
+
+
+# Окошко для ввода группы при добавлении ДЗ
+def homework_input_group_window(*, groups: list[Group], back_btn: InlineKeyboardButton):
+    builder = InlineKeyboardBuilder()
+
+    for group in groups:
+        group_b = group_button(group.name, group.id)
+        builder.add(group_b)
+
+    builder.add(back_b(back_btn))
+
+    builder.adjust(1)
+    return InfoWindow(
+        b("✏️ Выберите группу:"), inline_keyboard_markup=builder.as_markup()
     )
 
 

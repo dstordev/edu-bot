@@ -11,4 +11,5 @@ class AddHomeworkForm(StatesGroup):
     text = State()
     file_or_photo = State()
     assignment_date = State()
+    group = State()
     confirm = State()

@@ -15,9 +15,12 @@ async def test_homeworks_flow(
 ):
     dbrepositories = DBRepositories(db_session)
 
+    group_id: int = 1
+
     # Создаем домашние задания
     files = ["file1", "file2"]
     homework_id1 = await dbrepositories.homework.add_homework(
+        group_id=group_id,
         academic_subject_id=test_academic_subject.id,
         text="Нужно сделать несколько упражнений с 100 по 102.",
         assignment_date=date(year=2026, month=1, day=20),
@@ -27,6 +30,7 @@ async def test_homeworks_flow(
     assert homework_id1 == 1
 
     homework_id2 = await dbrepositories.homework.add_homework(
+        group_id=group_id,
         academic_subject_id=test_academic_subject.id,
         text="Нужно сделать несколько упражнений с 50 по 53.",
         assignment_date=date(year=2026, month=1, day=15),
@@ -34,6 +38,7 @@ async def test_homeworks_flow(
     assert homework_id2 == 2
 
     homework_id3 = await dbrepositories.homework.add_homework(
+        group_id=group_id,
         academic_subject_id=test_academic_subject.id,
         text="Нужно сделать несколько упражнений с 30 по 33.",
         assignment_date=date(year=2026, month=1, day=10),
@@ -46,7 +51,9 @@ async def test_homeworks_flow(
     )
 
     # Получаем невыполненные задания
-    result = await dbrepositories.homework.get_unfinished_homeworks(test_student.id)
+    result = await dbrepositories.homework.get_unfinished_homeworks(
+        test_student.id, test_student.group_id
+    )
 
     assert len(result) == 2
     assert result[1].academic_subject_id == test_academic_subject.id

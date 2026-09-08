@@ -43,7 +43,7 @@ async def handler_homework_unfinished(
     assert student is not None
 
     unfinished_homeworks = await dbrepositories.homework.get_unfinished_homeworks(
-        student.id, page_index=page_index
+        student.id, student.group_id, page_index=page_index
     )
 
     if len(unfinished_homeworks) == 0:

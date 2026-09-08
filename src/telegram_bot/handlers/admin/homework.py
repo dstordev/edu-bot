@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import datetime
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -15,6 +15,7 @@ from telegram_bot.windows.homework import (
     homework_assignment_date_window,
     homework_confirm_window,
     homework_created_window,
+    homework_input_group_window,
     homework_menu_window,
     text_homework_window,
 )
@@ -120,6 +121,7 @@ async def handler_file_or_photo_file(event: Message, state: FSMContext):
     await file_or_photo_window(back_btn=homework_add_b).answer_window(event)
 
 
+### Обработчик скипа добавления фотографии
 @admin_homework_router.callback_query(
     F.data == skip_b.callback_data, AddHomeworkForm.file_or_photo
 )
@@ -130,30 +132,20 @@ async def handler_file_or_photo_skip(event: CallbackQuery, state: FSMContext):
     await homework_assignment_date_window(back_btn=homework_add_b).answer_window(event)
 
 
+### Обработчик скипа добавления даты
 @admin_homework_router.callback_query(
     F.data == skip_b.callback_data, AddHomeworkForm.assignment_date
 )
 async def handler_assignment_date_skip(
     event: CallbackQuery, dbrepositories: DBRepositories, state: FSMContext
 ):
-    await state.set_state(AddHomeworkForm.confirm)
+    groups = await dbrepositories.group.get_groups()
 
-    academic_subject_id: int | None = await state.get_value("academic_subject_id")
-    assert academic_subject_id is not None
-
-    academic_subject = await dbrepositories.academic_subject.get_by_id(
-        academic_subject_id
-    )
-    assert academic_subject
-
-    text: str | None = await state.get_value("text")
-    assert text is not None
-
-    assignment_date: date | None = await state.get_value("assignment_date")
+    await state.set_state(AddHomeworkForm.group)
 
     # переходим на следующий этап заполнения домашнего задания
-    await homework_confirm_window(
-        academic_subject=academic_subject, text=text, assignment_date=assignment_date
+    await homework_input_group_window(
+        groups=groups, back_btn=homework_add_b
     ).answer_window(event)
 
 
@@ -163,7 +155,7 @@ async def handler_assignment_date(
     event: Message, dbrepositories: DBRepositories, state: FSMContext
 ):
     try:
-        assignment_date: date = datetime.strptime(event.text, DATE_FORMAT).date()  # pyright: ignore[reportArgumentType]
+        datetime.strptime(event.text, DATE_FORMAT).date()  # pyright: ignore[reportArgumentType]
     except ValueError:
         logger.warning("Не удалось преобразовать дату назначения домашнего задания")
         await homework_assignment_date_window(back_btn=homework_add_b).answer_window(
@@ -172,6 +164,30 @@ async def handler_assignment_date(
         return
 
     await state.update_data({"assignment_date": event.text})
+
+    groups = await dbrepositories.group.get_groups()
+
+    await state.set_state(AddHomeworkForm.group)
+
+    # переходим на следующий этап заполнения домашнего задания
+    await homework_input_group_window(
+        groups=groups, back_btn=homework_add_b
+    ).answer_window(event)
+
+
+### Обработчик выбора группы
+@admin_homework_router.callback_query(
+    F.data.startswith("group_id:"), AddHomeworkForm.group
+)
+async def handler_homework_group(
+    event: CallbackQuery, dbrepositories: DBRepositories, state: FSMContext
+):
+    group_id = int(event.data.split(":")[1])  # pyright: ignore[reportOptionalMemberAccess]
+    await state.update_data({"group_id": group_id})
+
+    assignment_date = await state.get_value("assignment_date")
+    if assignment_date:
+        assignment_date = datetime.strptime(assignment_date, DATE_FORMAT).date()
 
     academic_subject_id: int | None = await state.get_value("academic_subject_id")
     assert academic_subject_id is not None
@@ -213,16 +229,20 @@ async def handler_homework_confirm(
     text: str | None = await state.get_value("text")
     assert text is not None
 
-    assignment_date: date | None = None
-    _assignment_date: str | None = await state.get_value("assignment_date")
-    if _assignment_date:
-        assignment_date = datetime.strptime(_assignment_date, DATE_FORMAT).date()
+    group_id: int | None = await state.get_value("group_id")
+    if group_id is None:
+        raise RuntimeError("group_id is None")
+
+    assignment_date = await state.get_value("assignment_date")
+    if assignment_date:
+        assignment_date = datetime.strptime(assignment_date, DATE_FORMAT).date()
 
     file_file_ids: list[str] | None = await state.get_value("file_file_ids")
     photo_file_ids: list[str] | None = await state.get_value("photo_file_ids")
 
     try:
         await dbrepositories.homework.add_homework(
+            group_id=group_id,
             academic_subject_id=academic_subject_id,
             text=text,
             assignment_date=assignment_date,

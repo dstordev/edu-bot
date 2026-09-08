@@ -15,6 +15,7 @@ class HomeworkRepository:
     async def add_homework(
         self,
         *,
+        group_id: int,
         academic_subject_id: int,
         text: str,
         assignment_date: date | None = None,
@@ -27,6 +28,7 @@ class HomeworkRepository:
                 academic_subject_id=academic_subject_id,
                 text=text,
                 assignment_date=assignment_date,
+                group_id=group_id,
             )
             .returning(Homework.id)
         )
@@ -55,6 +57,7 @@ class HomeworkRepository:
     async def get_unfinished_homeworks(
         self,
         student_id: int,
+        group_id: int,
         limit: int = 10,
         page_index: int = 0,
     ) -> Sequence[Homework]:
@@ -65,9 +68,11 @@ class HomeworkRepository:
                 joinedload(Homework.homework_photo),
                 joinedload(Homework.homework_file),
                 joinedload(Homework.academic_subject),
+                joinedload(Homework.group),
             )
             .where(
-                ~(
+                (Homework.group_id == group_id)
+                & ~(
                     select(StudentHomework.id).where(
                         (StudentHomework.student_id == student_id)
                         & (StudentHomework.homework_id == Homework.id)

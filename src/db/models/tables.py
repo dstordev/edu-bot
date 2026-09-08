@@ -228,7 +228,9 @@ class Homework(Base):
     academic_subject_id: Mapped[int] = mapped_column(ForeignKey("academic_subject.id"))
     text: Mapped[str]
     assignment_date: Mapped[dt_date | None]
+    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
 
+    group = relationship("Group")
     student_homework = relationship("StudentHomework")
     homework_photo = relationship("HomeworkPhoto")
     homework_file = relationship("HomeworkFile")
