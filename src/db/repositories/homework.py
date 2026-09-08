@@ -127,4 +127,4 @@ class HomeworkRepository:
                 & (StudentHomework.student_id == student_id)
             )
         )
-        return True if result.scalar() is not None else False
+        return result.scalar() is not None
