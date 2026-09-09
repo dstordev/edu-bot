@@ -249,9 +249,9 @@ async def handler_homework_confirm(
             photo_telegram_file_ids=photo_file_ids,
             file_telegram_file_ids=file_file_ids,
         )
-    except Exception as ex:
+    except Exception:
         logger.error("Не удалось создать домашнее задание.")
-        raise ex
+        raise
 
     await state.clear()
     await homework_created_window().answer_window(event)
