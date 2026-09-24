@@ -4,6 +4,7 @@ import sys
 from loguru import logger
 from redis.asyncio.client import Redis
 
+from checks import check_postgres_connection, check_redis_connection
 from db.connect import async_sessmaker
 from schedule_notifier import ScheduleNotifier
 from settings import settings
@@ -18,11 +19,21 @@ logger.info(f"Версия приложения: {VERSION}")
 
 
 async def main() -> None:
-    logger.debug("Настраиваю подключение к REDIS...")
-    redis = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
+    # Проверки перед запуском
+    logger.debug("Проверяю подключение к postgres...")
+    if not await check_postgres_connection(async_sessmaker):
+        return logger.warning("Не удалось подключится к postgres.")
+
+    logger.debug("Проверяю подключение к REDIS...")
+    if not await check_redis_connection(
+        host=settings.REDIS_HOST, port=settings.REDIS_PORT
+    ):
+        return logger.warning("Не удалось подключится к redis.")
+
+    redis_client = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 
     telegram_bot_app = TelegramBotApp(
-        settings.BOT_TOKEN, redis=redis, async_session_maker=async_sessmaker
+        settings.BOT_TOKEN, redis=redis_client, async_session_maker=async_sessmaker
     )
 
     logger.debug("Запускаю ScheduleNotifier...")
