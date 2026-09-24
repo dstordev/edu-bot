@@ -1,6 +1,11 @@
 import asyncio
 import sys
 
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.types import BotCommand
 from loguru import logger
 from redis.asyncio.client import Redis
 
@@ -8,7 +13,10 @@ from checks import check_postgres_connection, check_redis_connection
 from db.connect import async_sessmaker
 from schedule_notifier import ScheduleNotifier
 from settings import settings
-from telegram_bot.app import TelegramBotApp
+from telegram_bot.handlers import global_router
+from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
+from telegram_bot.middlewares.log_middleware import LoggerMiddleware
+from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
 
 VERSION = "0.5.0"
 
@@ -32,26 +40,39 @@ async def main() -> None:
 
     redis_client = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 
-    telegram_bot_app = TelegramBotApp(
-        settings.BOT_TOKEN, redis=redis_client, async_session_maker=async_sessmaker
+    bot = Bot(
+        token=settings.BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
 
+    dp = Dispatcher(storage=RedisStorage(redis_client))
+    dp.update.outer_middleware(DbSessionMiddleware(session_pool=async_sessmaker))
+
+    global_router.message.middleware.register(ThrottlingMiddleware())
+    global_router.callback_query.middleware.register(ThrottlingMiddleware())
+
+    global_router.message.middleware.register(LoggerMiddleware())
+    global_router.callback_query.middleware.register(LoggerMiddleware())
+    dp.include_router(global_router)
+
     logger.debug("Запускаю ScheduleNotifier...")
-    ScheduleNotifier(telegram_bot_app.bot, async_sessmaker).run_monitor()
+    ScheduleNotifier(bot, async_sessmaker).run_monitor()
 
     logger.debug("Устанавливаю в бота команду /start...")
-    await telegram_bot_app.set_start_command()
+    await bot.set_my_commands(
+        commands=[BotCommand(command="/start", description="🐱 Обновить бота")]
+    )
 
     logger.debug("Запускаю бота...")
-    await telegram_bot_app.start_polling_telegram_bot(
+    dp.startup.register(lambda: logger.info("Бот запущен"))
+    dp.workflow_data.update(
         async_sessmaker=async_sessmaker,
         ADMIN_IDS=settings.ADMIN_IDS,
         DEVELOPER_ID=settings.DEVELOPER_ID,
-        startup=lambda: logger.info("Бот запущен"),
     )
+
+    await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    # logging.basicConfig(level=logging.INFO, stream=sys.stdout)
-
     asyncio.run(main())
