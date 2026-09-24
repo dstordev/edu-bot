@@ -1,7 +1,7 @@
 [project]
 name = "edu-bot"
 version = "0.1.0"
-requires-python = ">=3.14.6"
+requires-python = ">=3.14.7"
 dependencies = [
     "aiogram==3.31.0",
     "sqlalchemy==2.0.52",
