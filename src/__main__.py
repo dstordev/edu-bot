@@ -59,7 +59,7 @@ async def main() -> None:
     logger.debug("Запускаю ScheduleNotifier...")
     ScheduleNotifier(bot, async_sessmaker).run_monitor()
 
-    logger.debug("Устанавливаю в бота команду /start...")
+    logger.debug("Устанавливаю команды в бота...")
     await bot.set_my_commands(
         commands=[BotCommand(command="/start", description="🐱 Обновить бота")]
     )
