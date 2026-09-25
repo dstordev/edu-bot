@@ -40,6 +40,7 @@ async def main() -> None:
 
     redis_client = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
 
+    logger.debug("Настраиваю бота...")
     bot = Bot(
         token=settings.BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
@@ -70,7 +71,6 @@ async def main() -> None:
         ADMIN_IDS=settings.ADMIN_IDS,
         DEVELOPER_ID=settings.DEVELOPER_ID,
     )
-
     await dp.start_polling(bot)
 
 
