@@ -13,4 +13,6 @@ COPY . .
 
 RUN uv sync --frozen
 ENV PYTHONPATH /app/src
-CMD ["uv", "run", "src/"]
+
+# Сначала миграции, потом запуск бота:
+CMD ["sh", "-c", "uv run alembic upgrade head && uv run src/"]
