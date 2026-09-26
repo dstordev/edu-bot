@@ -1,7 +1,7 @@
 from collections.abc import Sequence
 from datetime import date, time
 
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -11,6 +11,33 @@ from db.models.tables import Class, ReplacementSchedule
 class ReplacementScheduleRepository:
     def __init__(self, async_session: AsyncSession):
         self.async_session = async_session
+
+    async def add(
+        self,
+        date_: date,
+        group_id: int,
+        class_id: int,
+        academic_subject_id: int,
+        class_type_id: int,
+        audience_id: int,
+    ) -> ReplacementSchedule:
+        """Добавляет пару к расписанию в базу данных.
+        Возвращает добавленный объект."""
+
+        # TODO: добавить проверку на дублирование пары с один день у одной группы с одинаковым class_id.
+        result = await self.async_session.execute(
+            insert(ReplacementSchedule)
+            .values(
+                date=date_,
+                group_id=group_id,
+                class_id=class_id,
+                academic_subject_id=academic_subject_id,
+                class_type_id=class_type_id,
+                audience_id=audience_id,
+            )
+            .returning(ReplacementSchedule)
+        )
+        return result.scalar_one()
 
     async def get_by_day(self, date_: date) -> Sequence[ReplacementSchedule]:
         """Возвращает расписание по дню недели."""
