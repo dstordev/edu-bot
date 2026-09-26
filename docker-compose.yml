@@ -23,7 +23,6 @@ services:
     image: redis:alpine
     container_name: redis_cache
     restart: always
-    # Эта команда включает сохранение на диск (каждые 60 сек, если был хоть 1 ключ изменен)
     command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
@@ -37,21 +36,10 @@ services:
       timeout: 3s
       retries: 5
 
-  migrations:
-    build: .
-    command: alembic upgrade head
-    env_file:
-      - .env
-    environment:
-      - DB_HOST=db
-    networks:
-      - app_net
-    depends_on:
-      db:
-        condition: service_healthy
-
   bot:
     build: .
+    image: ghcr.io/dstordev/edu-bot:latest
+    restart: always
     env_file:
       - .env
     environment:
@@ -65,8 +53,18 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      migrations:
-        condition: service_completed_successfully
+
+  # Сервис автообновления:
+  watchtower:
+    image: containrrr/watchtower
+    restart: always
+    profiles: ["prod"]
+    environment:
+      - DOCKER_API_VERSION=1.44
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    # Следит за обновлением образа бота раз в 60 сек
+    command: --interval 60 --cleanup bot
 
 volumes:
   postgres_data:
