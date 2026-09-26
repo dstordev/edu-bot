@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models.tables import AcademicSubject
@@ -30,3 +30,12 @@ class AcademicSubjectRepository:
             .offset(page_index * limit)
         )
         return result.scalars().all()
+
+    async def add(self, name: str) -> AcademicSubject:
+        """Добавляет новый учебный предмет в базу данных.
+        Возвращает добавленный объект."""
+
+        result = await self.async_session.execute(
+            insert(AcademicSubject).values(name=name).returning(AcademicSubject)
+        )
+        return result.scalar_one()
