@@ -140,7 +140,6 @@ class AcademicSubject(Base):
     )
 
 
-# Storage for classes/lessons
 class Class(Base):
     __tablename__ = "class"
 
@@ -258,6 +257,7 @@ class StudentHomework(Base):
 
 class _HomeworkFileMixin:
     id: Mapped[int] = mapped_column(primary_key=True)
+    # homework_id и telegram_file_id связаны UniqueConstraint в дочерних классах
     homework_id: Mapped[int] = mapped_column(ForeignKey("homework.id"))
     telegram_file_id: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(
