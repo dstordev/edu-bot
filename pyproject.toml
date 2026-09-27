@@ -12,4 +12,5 @@ dependencies = [
     "asyncpg==0.31.0",
     "pydantic-settings==2.15.0",
     "redis==8.1.0",
+    "aiogram-dialog>=2.6.0",
 ]
