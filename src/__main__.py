@@ -18,7 +18,7 @@ from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
 from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
 
-VERSION = "0.5.0"
+VERSION = "0.6.0"
 
 logger.remove()
 logger.add(sys.stderr, level="DEBUG")
