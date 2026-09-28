@@ -17,3 +17,9 @@ class AudienceRepository:
             select(Audience).where(Audience.id == _id)
         )
         return result.scalar()
+
+    async def get_all(self) -> list[Audience]:
+        """Возвращает список всех аудиторий."""
+
+        result = await self.async_session.execute(select(Audience))
+        return list(result.scalars().all())

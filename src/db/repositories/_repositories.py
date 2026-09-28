@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .academic_subject import AcademicSubjectRepository
 from .audience import AudienceRepository
 from .class_ import ClassRepository
+from .class_type import ClassTypeRepository
 from .group import GroupRepository
 from .homework import HomeworkRepository
 from .non_working_day import NonWorkingDayRepository
@@ -28,3 +29,4 @@ class DBRepositories:
         self.non_working_day = NonWorkingDayRepository(async_session)
         self.student_homework = StudentHomeworkRepository(async_session)
         self.homework = HomeworkRepository(async_session)
+        self.class_type = ClassTypeRepository(async_session)

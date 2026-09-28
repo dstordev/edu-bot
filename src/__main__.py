@@ -4,8 +4,10 @@ import sys
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
+from aiogram_dialog import setup_dialogs
 from loguru import logger
 from redis.asyncio.client import Redis
 
@@ -46,7 +48,11 @@ async def main() -> None:
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
 
-    dp = Dispatcher(storage=RedisStorage(redis_client))
+    dp = Dispatcher(
+        storage=RedisStorage(
+            redis_client, key_builder=DefaultKeyBuilder(with_destiny=True)
+        )
+    )
     dp.update.outer_middleware(DbSessionMiddleware(session_pool=async_sessmaker))
 
     global_router.message.middleware.register(ThrottlingMiddleware())
@@ -55,6 +61,8 @@ async def main() -> None:
     global_router.message.middleware.register(LoggerMiddleware())
     global_router.callback_query.middleware.register(LoggerMiddleware())
     dp.include_router(global_router)
+
+    setup_dialogs(dp)
 
     logger.debug("Запускаю ScheduleNotifier...")
     ScheduleNotifier(bot, async_sessmaker).run_monitor()
