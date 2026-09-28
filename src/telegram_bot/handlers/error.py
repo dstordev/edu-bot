@@ -1,4 +1,4 @@
-from aiogram import Bot, Router
+from aiogram import Bot, Router, html
 from aiogram.types import ErrorEvent
 from loguru import logger
 
@@ -10,7 +10,8 @@ error_router = Router(name=__name__)
 
 @error_router.error()
 async def error_handler(err_event: ErrorEvent, bot: Bot):
-    dev_error_text = f"⭕ Произошла неизвестная ошибка: {code(err_event.exception)}."
+    safe_text = html.quote(str(err_event.exception))
+    dev_error_text = f"⭕ Произошла неизвестная ошибка: {code(safe_text)}."
 
     # Выясняем вызвал ли ошибку пользователь
     from_user = None
