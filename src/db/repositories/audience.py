@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from typing import cast
+
+from sqlalchemy import CursorResult, delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models.tables import Audience
@@ -23,3 +25,26 @@ class AudienceRepository:
 
         result = await self.async_session.execute(select(Audience))
         return list(result.scalars().all())
+
+    async def add(self, name: str) -> Audience:
+        """Добавляет аудиторию в БД и возвращает добавленный объект."""
+
+        r = await self.async_session.execute(
+            insert(Audience).values(name=name).returning(Audience)
+        )
+        return r.scalar_one()
+
+    async def delete_by_id(self, id_: int) -> bool:
+        """Удаляет аудиторию из БД по ее id."""
+
+        r = await self.async_session.execute(delete(Audience).where(Audience.id == id_))
+        r = cast(CursorResult, r)
+        return r.rowcount > 0
+
+    async def find_by_name(self, name: str) -> Audience | None:
+        """Ищет и возвращает аудиторию по ее имени."""
+
+        r = await self.async_session.execute(
+            select(Audience).where(Audience.name == name)
+        )
+        return r.scalar_one_or_none()
