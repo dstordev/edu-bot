@@ -39,3 +39,11 @@ class AcademicSubjectRepository:
             insert(AcademicSubject).values(name=name).returning(AcademicSubject)
         )
         return result.scalar_one()
+
+    async def find_by_name(self, name: str) -> AcademicSubject | None:
+        """Ищет и возвращает учебный предмет по его имени."""
+
+        r = await self.async_session.execute(
+            select(AcademicSubject).where(AcademicSubject.name == name)
+        )
+        return r.scalar_one_or_none()
