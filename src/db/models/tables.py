@@ -152,6 +152,10 @@ class Class(Base):
         TIME_HM
     )  # time in iso 8601 format up to minutes
 
+    __table_args__ = (
+        UniqueConstraint("start_at", "end_at", name="uq_class_start_at_end_at"),
+    )
+
 
 class _ScheduleMixin:
     """Общие колонки для сущностей расписания"""
