@@ -1,7 +1,8 @@
 from collections.abc import Sequence
 from datetime import date, time
+from typing import cast
 
-from sqlalchemy import insert, select
+from sqlalchemy import CursorResult, delete, insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -113,3 +114,15 @@ class ReplacementScheduleRepository:
             .order_by(Class.number)
         )
         return result.scalars().all()
+
+    async def delete_by_group_and_date(self, group_id: int, date_: date) -> bool:
+        """Удаляет расписание замен для группы на конкретную дату."""
+
+        r = await self.async_session.execute(
+            delete(ReplacementSchedule).where(
+                (ReplacementSchedule.group_id == group_id)
+                & (ReplacementSchedule.date == date_)
+            )
+        )
+        r = cast(CursorResult, r)
+        return r.rowcount > 0
