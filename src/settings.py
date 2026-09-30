@@ -2,6 +2,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    SESSION_ID_YANDEX: str
+    USER_ID_YANDEX: str
+    TELEMOST_CHAT_ID: str
+
     BOT_TOKEN: str
     TEST_POSTGRES_URL: str
     ADMIN_IDS: list[int]
