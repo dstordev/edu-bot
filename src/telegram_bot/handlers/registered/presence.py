@@ -1,3 +1,5 @@
+from zoneinfo import ZoneInfo
+
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InaccessibleMessage
 from loguru import logger
@@ -29,7 +31,7 @@ async def callback_presence_surveys_handler(
 
     # Перед отображением времени переводим его в локальную зону
     for survey in surveys:
-        survey.created_at = survey.created_at.astimezone()
+        survey.created_at = survey.created_at.astimezone(ZoneInfo("Europe/Moscow"))
     await presence_surveys_window(surveys).answer_window(event)
 
 

@@ -1,4 +1,5 @@
-from datetime import UTC, date, datetime
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict
 
@@ -32,7 +33,7 @@ class WeeklySchedule(BaseModel):
 async def get_daily_schedule(
     group_id: int, day: date, dbrepositories: DBRepositories
 ) -> DailySchedule:
-    now_day = datetime.now(UTC).astimezone().date()
+    now_day = datetime.now(ZoneInfo("Europe/Moscow")).date()
 
     schedule = await dbrepositories.replacement_schedule.get_group_lessons_by_day(
         group_id, day

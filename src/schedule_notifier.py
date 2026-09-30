@@ -1,4 +1,5 @@
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -44,7 +45,7 @@ class ScheduleNotifier:
         cur_logger.info("Начинаю проверку за 5 минут до начала/конца пары...")
 
         # Дата и время сейчас
-        dt_now: datetime = datetime.now(UTC).astimezone()
+        dt_now: datetime = datetime.now(ZoneInfo("Europe/Moscow"))
         # (Дата и время сейчас) + 5 мин.
         dt_now_plus_5m: datetime = dt_now + timedelta(minutes=5)
         # Дата сейчас + 5 мин.

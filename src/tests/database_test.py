@@ -1,4 +1,5 @@
-from datetime import UTC, datetime
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +22,7 @@ from utils.schedule import get_week_stars
 async def test_is_non_working_day(db_session: AsyncSession):
     dbrepositories = DBRepositories(db_session)
 
-    day = datetime.now(UTC).date()
+    day = datetime.now(ZoneInfo("Europe/Moscow")).date()
 
     non_working_day = NonWorkingDay(day=day)
     db_session.add(non_working_day)

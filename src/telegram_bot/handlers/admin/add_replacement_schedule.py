@@ -115,7 +115,7 @@ async def on_date(
 
     try:
         # TODO: исправить предупреждение ruff о timezone
-        datetime.strptime(data, "%d.%m.%Y").date()
+        datetime.strptime(data, "%d.%m.%Y").date()  # noqa: DTZ007
     except Exception as ex:
         return logger.warning(f"Не удалось спарсить введенную дату: {ex}")
 
