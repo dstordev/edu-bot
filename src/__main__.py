@@ -8,9 +8,12 @@ from aiogram.fsm.storage.base import DefaultKeyBuilder
 from aiogram.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand
 from aiogram_dialog import setup_dialogs
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
-from redis.asyncio.client import Redis
+from redis.asyncio import Redis
 
+from auto_update_replacement_schedule.service import check_schedule_updates
 from checks import check_postgres_connection, check_redis_connection
 from db.connect import async_sessmaker
 from schedule_notifier import ScheduleNotifier
@@ -26,6 +29,36 @@ logger.remove()
 logger.add(sys.stderr, level="DEBUG")
 
 logger.info(f"Версия приложения: {VERSION}")
+
+
+scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+
+
+async def on_startup(bot: Bot, redis: Redis) -> None:
+    # Запускаем проверку каждые 5 минут с 06:00 до 22:55
+    scheduler.add_job(
+        check_schedule_updates,
+        trigger=CronTrigger(minute="*/5", hour="6-22", timezone="Europe/Moscow"),
+        id="schedule_checker_job",
+        name="Проверка расписания замен в telemost",
+        kwargs={
+            "study_chat_id": settings.TELEMOST_CHAT_ID,
+            "session_id": settings.SESSION_ID_YANDEX,
+            "user_id": settings.USER_ID_YANDEX,
+            "redis": redis,
+            "bot": bot,
+            "async_sessmaker": async_sessmaker,
+        },
+        max_instances=1,  # Защита: следующий запуск не начнется, пока идет предыдущий
+        coalesce=True,  # Если бот завис, пропущенные запуски объединятся в один
+    )
+    scheduler.start()
+    logger.debug("APScheduler запущен.")
+
+
+async def on_shutdown() -> None:
+    scheduler.shutdown(wait=False)
+    logger.debug("APScheduler остановлен.")
 
 
 async def main() -> None:
@@ -67,6 +100,10 @@ async def main() -> None:
     logger.debug("Запускаю ScheduleNotifier...")
     ScheduleNotifier(bot, async_sessmaker).run_monitor()
 
+    logger.debug("Регистрирую запуск автообновления расписания...")
+    dp.startup.register(on_startup)
+    dp.shutdown.register(on_shutdown)
+
     logger.debug("Устанавливаю команды в бота...")
     await bot.set_my_commands(
         commands=[BotCommand(command="/start", description="🐱 Обновить бота")]
@@ -78,6 +115,7 @@ async def main() -> None:
         async_sessmaker=async_sessmaker,
         ADMIN_IDS=settings.ADMIN_IDS,
         DEVELOPER_ID=settings.DEVELOPER_ID,
+        redis=redis_client,
     )
     await dp.start_polling(bot)
 
