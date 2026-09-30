@@ -24,3 +24,10 @@ class ClassRepository:
             )
         )
         return result.scalars().all()
+
+    async def find_class_by_time(self, start_at: time, end_at: time) -> Class | None:
+        """Ищет и возвращает пару, у которой время начала и время конца совпадают с переданными"""
+        r = await self.async_session.execute(
+            select(Class).where((Class.start_at == start_at) & (Class.end_at == end_at))
+        )
+        return r.scalar_one_or_none()
