@@ -254,10 +254,15 @@ async def check_schedule_updates(
                         async for student in repos.student.find_students_by_group(
                             group.id
                         ):
-                            await bot.send_message(
-                                chat_id=student.telegram_id,
-                                text=f"😺 Обновлено расписание на {schedule_date}!",
-                            )
+                            try:
+                                await bot.send_message(
+                                    chat_id=student.telegram_id,
+                                    text=f"😺 Обновлено расписание на {schedule_date}!",
+                                )
+                            except Exception as ex:
+                                logger.error(
+                                    f"[Worker] При отправке сообщения студенту произошла неизвестная ошибка: {ex}"
+                                )
             else:
                 logger.info(
                     f"[Worker] В файле {filename} замен для группы {group.name} не найдено."
