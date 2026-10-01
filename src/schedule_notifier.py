@@ -16,13 +16,11 @@ from telegram_bot.windows.registered import (
 )
 from utils.schedule import get_week_stars
 
+ScheduleItem = ReplacementSchedule | Schedule
+
 
 class ScheduleNotifier:
-    """
-    Этот класс должен будет контролировать уведомление студентов групп на основе времени начала и конца занятий.
-
-    У него есть доступы к методам телеграм бота и таблицам.
-    """
+    """Контролирует рассылку уведомлений студентам о начале и конце пар."""
 
     def __init__(
         self, bot: Bot, async_sessionmaker: async_sessionmaker[AsyncSession]
@@ -32,268 +30,159 @@ class ScheduleNotifier:
         self.__scheduler = AsyncIOScheduler()
 
     def run_monitor(self) -> None:
-        self.__scheduler.add_job(self.check_class_and_notify, "interval", minutes=1)
+        """Запускает фоновый планировщик проверки расписания каждую минуту."""
+
+        self.__scheduler.add_job(
+            self.check_class_and_notify,
+            "interval",
+            minutes=1,
+            max_instances=1,
+            coalesce=True,
+        )
         self.__scheduler.start()
 
     async def check_class_and_notify(self) -> None:
-        """
-        Эта функция уведомит студентов из групп, у которых через 5 минут начнется или закончится занятие. Она учитывает расписание замен и статичное расписание.
-        """
+        """Проверяет пары через 5 минут и рассылает уведомления студентам."""
 
-        cur_logger = logger.bind()
-
-        cur_logger.info("Начинаю проверку за 5 минут до начала/конца пары...")
-
-        # Дата и время сейчас
-        dt_now: datetime = datetime.now(ZoneInfo("Europe/Moscow"))
-        # (Дата и время сейчас) + 5 мин.
-        dt_now_plus_5m: datetime = dt_now + timedelta(minutes=5)
-        # Дата сейчас + 5 мин.
-        day_now_plus_5m: date = dt_now_plus_5m.date()
-        # Время сейчас + 5 мин.
-        time_now_plus_5m: time = dt_now_plus_5m.time()
-        # Обнуляем секунды и микросекунды - это костыль
-        time_now_plus_5m = time_now_plus_5m.replace(second=0, microsecond=0)
-
-        cur_logger.debug(f"Время через 5 минут: {time_now_plus_5m}")
+        target_dt = (
+            datetime.now(ZoneInfo("Europe/Moscow")) + timedelta(minutes=5)
+        ).replace(second=0, microsecond=0)
+        target_date, target_time = target_dt.date(), target_dt.time()
 
         async with self.__async_sessionmaker() as session:
-            dbrepositories = DBRepositories(session)
+            repos = DBRepositories(session)
 
-            cur_logger.debug("Проверяю рабочий ли сегодня день...")
-
-            if (
-                await is_non_working_day(
-                    day=day_now_plus_5m, dbrepositories=dbrepositories
-                )
-                is True
-            ):
-                cur_logger.debug("-> Сегодня нерабочий день. Проверка окончена.")
+            if await is_non_working_day(day=target_date, dbrepositories=repos):
                 return
-            else:
-                cur_logger.debug("-> Сегодня рабочий день")
 
-            # Список, где хранится собранная информация о расписании для групп.
-            schedule_and_next_list: list[
-                tuple[
-                    ReplacementSchedule | Schedule,
-                    ReplacementSchedule | Schedule | None,
-                ]
-            ] = []
-
-            cur_logger.debug(
-                "Смотрю какие группы сегодня учатся по расписанию замен..."
+            replacement_groups = await self.find_group_ids_in_replacement_schedules(
+                target_date, repos
             )
 
-            group_ids_in_replacement_schedules = (
-                await self.find_group_ids_in_replacement_schedules(
-                    day_now_plus_5m, dbrepositories
+            schedules: list[tuple[ScheduleItem, ScheduleItem | None]] = []
+            schedules.extend(
+                await self.find_schedules(
+                    target_date, target_time, replacement_groups, repos
                 )
             )
-            if len(group_ids_in_replacement_schedules) > 0:
-                cur_logger.debug(
-                    f"-> Группы сегодня в расписании замен: {group_ids_in_replacement_schedules}"
-                )
-            else:
-                cur_logger.debug(
-                    "-> Сегодня ни одна группа не учится по расписанию замен"
-                )
 
-            cur_logger.debug(f"Ищу статичные расписания на {time_now_plus_5m}...")
-            # Ищем статичные расписания на сегодня, с конкретными занятиями.
-
-            # (Статичное, Группа 1, пара 1)
-            # (Статичное, Группа 2, пара 1)
-            # (Статичное, Группа 3, пара 1)
-            schedules = await self.find_schedules(
-                day_now_plus_5m,
-                time_now_plus_5m,
-                group_ids_in_replacement_schedules,
-                dbrepositories,
-            )
-            schedule_and_next_list.extend(schedules)
-            if len(schedules) <= 0:
-                cur_logger.debug(
-                    f"-> Не удалось найти статичные расписания на {time_now_plus_5m}"
-                )
-
-            if len(group_ids_in_replacement_schedules) > 0:
-                # Ищем расписание замен на сегодня, с конкретными занятиями.
-                cur_logger.debug(f"Ищу расписание замен на {time_now_plus_5m}...")
-
-                # (Замены, Группа 1, пара 1)
-                # (Замены, Группа 2, пара 1)
-                # (Замены, Группа 3, пара 1)
-                replacement_schedules = await self.find_replacement_schedules(
-                    time_now_plus_5m, day_now_plus_5m, dbrepositories
-                )
-                schedule_and_next_list.extend(replacement_schedules)
-                if len(replacement_schedules) <= 0:
-                    cur_logger.debug(
-                        f"-> Не удалось найти расписание замен на {time_now_plus_5m}"
+            if replacement_groups:
+                schedules.extend(
+                    await self.find_replacement_schedules(
+                        target_date, target_time, repos
                     )
-
-            if len(schedule_and_next_list) <= 0:
-                cur_logger.info(
-                    "-> Не удалось найти конец или начало любой пары через 5 минут. Проверка окончена."
                 )
+
+            if not schedules:
                 return
 
-            cur_logger.debug("Подготавливаю сообщения для отправки студентам...")
-            notifications_to_send = await self.prepare_student_data_notification(
-                schedule_and_next_list, dbrepositories, time_now_plus_5m
+            notifications = await self.prepare_student_data_notification(
+                schedules, repos, target_time
             )
 
-        cur_logger.info("Отправляю уведомления студентам...")
-        # Проходимся по списку с уведомлениями, и отправляем его.
-        for student_telegram_id, notify_window in notifications_to_send:
+        for student_id, window in notifications:
             try:
-                await self.telegram_notify_student(student_telegram_id, notify_window)
-                cur_logger.success(
-                    f"-> Сообщение доставлено студенту {student_telegram_id}."
-                )
+                await self.telegram_notify_student(student_id, window)
             except Exception as ex:
-                cur_logger.error(
-                    f"-> При отправке сообщения студенту произошла неизвестная ошибка: {ex}"
-                )
-        cur_logger.success("-> Проверка окончена.")
+                logger.error(f"Ошибка отправки уведомления студенту {student_id}: {ex}")
 
     async def find_group_ids_in_replacement_schedules(
-        self, day: date, dbrepositories: DBRepositories
+        self, day: date, repos: DBRepositories
     ) -> set[int]:
-        # Какие группы сегодня учатся по расписанию замен.
-        groups_in_replacement_schedules: set[int] = set()
-        for (
-            replacement_schedule
-        ) in await dbrepositories.replacement_schedule.get_by_day(day):
-            groups_in_replacement_schedules.add(replacement_schedule.group_id)
-        return groups_in_replacement_schedules
+        """Возвращает ID групп, у которых на указанный день есть замены."""
+
+        replacements = await repos.replacement_schedule.get_by_day(day)
+        return {item.group_id for item in replacements}
 
     async def find_schedules(
         self,
         day: date,
         time_: time,
-        groups_in_replacement_schedules: set[int],
-        dbrepositories: DBRepositories,
+        replacement_groups: set[int],
+        repos: DBRepositories,
     ) -> list[tuple[Schedule, Schedule | None]]:
-        """
-        Пытается найти пары в расписаниях, которые начнутся/закончатся в переданное время
-        """
+        """Ищет базовые пары, граничащие с указанным временем (начало/конец)."""
 
-        target_groups_and_info: list[tuple[Schedule, Schedule | None]] = []
-
-        # Ищем статичные расписания на сегодня, с конкретными занятиями.
-        schedules = await dbrepositories.schedule.get_lessons_by_boundary_time(
-            day,
-            len(get_week_stars(day)),
-            time_,
+        result: list[tuple[Schedule, Schedule | None]] = []
+        lessons = await repos.schedule.get_lessons_by_boundary_time(
+            day, len(get_week_stars(day)), time_
         )
 
-        # Пройдемся по полученным расписаниям.
-        for schedule in schedules:
-            class_end_at = schedule.class_.end_at
-
-            # Если у этой группы сегодня расписание в заменах, то не уведомляем её по статичному расписанию. Скипаем.
-            if schedule.group_id in groups_in_replacement_schedules:
+        for item in lessons:
+            if item.group_id in replacement_groups:
                 continue
 
-            next_schedule: Schedule | ReplacementSchedule | None = None
-            if class_end_at == time_:
-                result = await dbrepositories.schedule.get_upcoming_group_lessons(
-                    schedule.group_id,
-                    day,
-                    schedule.stars,
-                    class_end_at,
+            next_lesson = None
+            if item.class_.end_at == time_:
+                upcoming = await repos.schedule.get_upcoming_group_lessons(
+                    item.group_id, day, item.stars, item.class_.end_at
                 )
-                if len(result) > 0:
-                    next_schedule = result[0]
+                next_lesson = upcoming[0] if upcoming else None
 
-            target_groups_and_info.append((schedule, next_schedule))
-        return target_groups_and_info
+            result.append((item, next_lesson))
+        return result
 
     async def find_replacement_schedules(
-        self, time_: time, day: date, dbrepositories: DBRepositories
+        self, day: date, time_: time, repos: DBRepositories
     ) -> list[tuple[ReplacementSchedule, ReplacementSchedule | None]]:
-        """
-        Пытается найти пары в расписаниях замен, которые начнутся/закончатся в переданное время
-        """
+        """Ищет пары по заменам, граничащие с указанным временем."""
 
-        schedule_and_next_list: list[
-            tuple[ReplacementSchedule, ReplacementSchedule | None]
-        ] = []
-
-        # Ищем у всех групп, любые пары, которые начнутся/закончатся в переданное время
-        replacement_schedules = (
-            await dbrepositories.replacement_schedule.get_lessons_by_boundary_time(
-                day, time_
-            )
+        result: list[tuple[ReplacementSchedule, ReplacementSchedule | None]] = []
+        lessons = await repos.replacement_schedule.get_lessons_by_boundary_time(
+            day, time_
         )
 
-        # Пройдемся по полученным расписаниям.
-        for schedule in replacement_schedules:
-            class_end_at = schedule.class_.end_at
-
-            # Если эта пара заканчивается, то сразу ищем информацию о следующей
-            next_schedule: Schedule | ReplacementSchedule | None = None
-            if class_end_at == time_:
-                result = await dbrepositories.replacement_schedule.get_upcoming_group_lessons(
-                    schedule.group_id, day, class_end_at
+        for item in lessons:
+            next_lesson = None
+            if item.class_.end_at == time_:
+                upcoming = await repos.replacement_schedule.get_upcoming_group_lessons(
+                    item.group_id, day, item.class_.end_at
                 )
-                if len(result) > 0:
-                    next_schedule = result[0]
-            schedule_and_next_list.append((schedule, next_schedule))
+                next_lesson = upcoming[0] if upcoming else None
 
-        return schedule_and_next_list
+            result.append((item, next_lesson))
+        return result
 
     async def prepare_student_data_notification(
         self,
-        target_groups_and_info: list[
-            tuple[ReplacementSchedule | Schedule, ReplacementSchedule | Schedule | None]
-        ],
-        dbrepositories: DBRepositories,
-        iso_t_now_plus_5_min: time,
-    ):
-        # Список, где хранятся уведомления для отправки
-        notifications_to_send: list[tuple[int, InfoWindow]] = []
+        targets: list[tuple[ScheduleItem, ScheduleItem | None]],
+        repos: DBRepositories,
+        target_time: time,
+    ) -> list[tuple[int, InfoWindow]]:
+        """Формирует список сообщений (окон) для рассылки студентам."""
 
-        for schedule, next_schedule in target_groups_and_info:
-            # Пройдемся по каждому студенту и запишем его в список.
-            async for student in dbrepositories.student.find_students_by_group(
+        notifications: list[tuple[int, InfoWindow]] = []
+
+        for schedule, next_schedule in targets:
+            cls = schedule.class_
+            is_start = cls.start_at == target_time
+
+            async for student in repos.student.find_students_by_group(
                 schedule.group_id
             ):
-                class_start_at = schedule.class_.start_at
-                class_end_at = schedule.class_.end_at
-                class_number = schedule.class_.number
-                academic_subject_name = schedule.academic_subject.name
-                audience_name = schedule.audience.name
-                # class_type_name: str = schedule.class_type_.name
-
-                if class_start_at == iso_t_now_plus_5_min:
-                    notify_window = notification_start_at_window(
-                        class_number,
-                        academic_subject_name,
-                        class_start_at,
-                        audience_name,
+                window = (
+                    notification_start_at_window(
+                        cls.number,
+                        schedule.academic_subject.name,
+                        cls.start_at,
+                        schedule.audience.name,
                     )
-                else:
-                    notify_window = notification_end_at_window(
-                        class_number,
-                        academic_subject_name,
-                        class_end_at,
-                        audience_name,
+                    if is_start
+                    else notification_end_at_window(
+                        cls.number,
+                        schedule.academic_subject.name,
+                        cls.end_at,
+                        schedule.audience.name,
                         next_schedule,
                     )
+                )
+                notifications.append((student.telegram_id, window))
 
-                # Вместо отправки уведомления сразу, мы сначала записываем его в список.
-                notifications_to_send.append((student.telegram_id, notify_window))
-
-        return notifications_to_send
+        return notifications
 
     async def telegram_notify_student(
         self, student_telegram_id: int, info_window: InfoWindow
-    ):
-        """
-        Эта функция уведомит студента о том, что пара началась или закончилась.
-        """
+    ) -> None:
+        """Отправляет сгенерированное окно сообщения конкретному пользователю."""
 
         await info_window.send_window(self.__bot, student_telegram_id)
