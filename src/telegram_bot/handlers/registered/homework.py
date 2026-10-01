@@ -5,6 +5,7 @@ from aiogram.types import (
     InputMediaDocument,
     InputMediaPhoto,
     InputMediaUnion,
+    MediaUnion,
 )
 
 from db.repositories import DBRepositories
@@ -163,25 +164,35 @@ async def handler_complete_homework(
 async def handler_view_homework_files(
     event: CallbackQuery, dbrepositories: DBRepositories
 ):
+    # Чтобы убрать предупреждения ruff и pyright
+    if not event.message or not event.data:
+        return
+
     homework_id = int(event.data.split(":")[1])  # pyright: ignore[reportOptionalMemberAccess]
 
     homework = await dbrepositories.homework.get_homework(homework_id)
     assert homework is not None
 
-    photo_media_group: list[InputMediaPhoto] = [
-        InputMediaPhoto(media=i.telegram_file_id) for i in homework.homework_photo
-    ]
-    if len(photo_media_group) > 0:
-        photo_media_group[0].caption = b(
-            f"📑 Материал к домашнему заданию {homework.id}"
+    caption = b(f"📑 Материал к домашнему заданию {homework.id}")
+    if media := homework.homework_photo:
+        media_group: list[MediaUnion] = [
+            InputMediaPhoto(media=i.telegram_file_id) for i in media[:-1]
+        ]
+        media_group.append(
+            InputMediaPhoto(media=media[-1].telegram_file_id, caption=caption)
         )
-        await event.message.answer_media_group(list(photo_media_group))  # pyright: ignore[reportOptionalMemberAccess]
+        await event.message.answer_media_group(media_group)
+    if media := homework.homework_file:
+        media_group: list[MediaUnion] = [
+            InputMediaDocument(media=i.telegram_file_id) for i in media[:-1]
+        ]
+        media_group.append(
+            InputMediaDocument(media=media[-1].telegram_file_id, caption=caption)
+        )
+        await event.message.answer_media_group(media_group)
 
-    files_media_group: list[InputMediaDocument] = [
-        InputMediaDocument(media=i.telegram_file_id) for i in homework.homework_file
-    ]
-    if len(files_media_group) > 0:
-        files_media_group[-1].caption = b(
-            f"📑 Материал к домашнему заданию {homework.id}"
-        )
-        await event.message.answer_media_group(list(files_media_group))  # pyright: ignore[reportOptionalMemberAccess]
+    # TODO: добавить уведомление о том, что материалы не найдены
+    # else:
+    # await event.answer(
+    #     "😺 Материалы к домашнему заданию не найдены", show_alert=True
+    # )
