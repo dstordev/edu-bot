@@ -1,4 +1,3 @@
-# service.py
 import asyncio
 import json
 from datetime import datetime
@@ -12,6 +11,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from db.repositories._repositories import DBRepositories
+from utils.notify_students import notify_students_by_group
 
 from .parser import ParsedLessonDTO, parse_docx_bytes
 from .utils import (
@@ -29,6 +29,7 @@ async def save_replacements_for_group(
     lessons_dto: list[ParsedLessonDTO],
 ) -> int:
     """Сохраняет замены конкретной группы в БД с валидацией сущностей."""
+
     added_count = 0
     group_lessons = [dto for dto in lessons_dto if group_name in dto.group_name]
 
@@ -169,7 +170,7 @@ async def check_schedule_updates(
     user_id: str,
     redis: Redis,
     async_sessmaker: async_sessionmaker[AsyncSession],
-    bot: Bot | None = None,  # Можно передать бота для отправки уведомлений
+    bot: Bot,
 ) -> None:
     """Основной пайплайн одной проверки."""
 
@@ -247,22 +248,20 @@ async def check_schedule_updates(
                 logger.success(
                     f"[Worker] Добавлено {added_count} замен для {group.name} на {schedule_date}!"
                 )
-                # Опционально: оповестить админа или группу в ТГ
-                if bot:
-                    async with async_sessmaker.begin() as session:
-                        repos = DBRepositories(session)
-                        async for student in repos.student.find_students_by_group(
-                            group.id
-                        ):
-                            try:
-                                await bot.send_message(
-                                    chat_id=student.telegram_id,
-                                    text=f"😺 Обновлено расписание на {schedule_date}!",
-                                )
-                            except Exception as ex:
-                                logger.error(
-                                    f"[Worker] При отправке сообщения студенту произошла неизвестная ошибка: {ex}"
-                                )
+
+                # Рассылка сообщений студентам
+                logger.debug(
+                    "[Worker] Начинаю уведомление студентов о новом расписании..."
+                )
+                total, failed = await notify_students_by_group(
+                    group.id,
+                    f"😺 Обновлено расписание на {schedule_date}!",
+                    async_sessmaker,
+                    bot,
+                )
+                logger.debug(
+                    f"[Worker] Уведомление студентов закончено. Успешно отправлено: {total - failed}/{total}"
+                )
             else:
                 logger.info(
                     f"[Worker] В файле {filename} замен для группы {group.name} не найдено."

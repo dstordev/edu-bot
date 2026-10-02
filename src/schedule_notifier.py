@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
@@ -14,6 +15,7 @@ from telegram_bot.windows.registered import (
     notification_end_at_window,
     notification_start_at_window,
 )
+from utils.notify_students import notify_students_by_group_repos
 from utils.schedule import get_week_stars
 
 ScheduleItem = ReplacementSchedule | Schedule
@@ -76,15 +78,16 @@ class ScheduleNotifier:
             if not schedules:
                 return
 
-            notifications = await self.prepare_student_data_notification(
+            for group_id, window in self.prepare_student_data_notification(
                 schedules, repos, target_time
-            )
-
-        for student_id, window in notifications:
-            try:
-                await self.telegram_notify_student(student_id, window)
-            except Exception as ex:
-                logger.error(f"Ошибка отправки уведомления студенту {student_id}: {ex}")
+            ):
+                logger.debug(f"Запускаю уведомление группы {group_id} о расписании...")
+                total, failed = await notify_students_by_group_repos(
+                    group_id, window.text, repos, self.__bot
+                )
+                logger.debug(
+                    f"Уведомление группы закончено. Успешно отправлено: {total - failed}/{total}"
+                )
 
     async def find_group_ids_in_replacement_schedules(
         self, day: date, repos: DBRepositories
@@ -143,46 +146,32 @@ class ScheduleNotifier:
             result.append((item, next_lesson))
         return result
 
-    async def prepare_student_data_notification(
+    def prepare_student_data_notification(
         self,
         targets: list[tuple[ScheduleItem, ScheduleItem | None]],
         repos: DBRepositories,
         target_time: time,
-    ) -> list[tuple[int, InfoWindow]]:
+    ) -> Generator[tuple[int, InfoWindow]]:
         """Формирует список сообщений (окон) для рассылки студентам."""
-
-        notifications: list[tuple[int, InfoWindow]] = []
 
         for schedule, next_schedule in targets:
             cls = schedule.class_
             is_start = cls.start_at == target_time
 
-            async for student in repos.student.find_students_by_group(
-                schedule.group_id
-            ):
-                window = (
-                    notification_start_at_window(
-                        cls.number,
-                        schedule.academic_subject.name,
-                        cls.start_at,
-                        schedule.audience.name,
-                    )
-                    if is_start
-                    else notification_end_at_window(
-                        cls.number,
-                        schedule.academic_subject.name,
-                        cls.end_at,
-                        schedule.audience.name,
-                        next_schedule,
-                    )
+            window = (
+                notification_start_at_window(
+                    cls.number,
+                    schedule.academic_subject.name,
+                    cls.start_at,
+                    schedule.audience.name,
                 )
-                notifications.append((student.telegram_id, window))
-
-        return notifications
-
-    async def telegram_notify_student(
-        self, student_telegram_id: int, info_window: InfoWindow
-    ) -> None:
-        """Отправляет сгенерированное окно сообщения конкретному пользователю."""
-
-        await info_window.send_window(self.__bot, student_telegram_id)
+                if is_start
+                else notification_end_at_window(
+                    cls.number,
+                    schedule.academic_subject.name,
+                    cls.end_at,
+                    schedule.audience.name,
+                    next_schedule,
+                )
+            )
+            yield schedule.group_id, window
