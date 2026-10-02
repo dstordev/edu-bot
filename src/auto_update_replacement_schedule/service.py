@@ -176,8 +176,9 @@ async def check_schedule_updates(
 
     files = await get_files(study_chat_id, session_id, user_id)
     if not files:
+        logger.debug("[Worker] Файлы отсутствуют")
         return
-    logger.debug(f"Получил файлы: {files}")
+    logger.debug(f"[Worker] Получил файлы: {files}")
 
     # Получаем группу из БД
     async with async_sessmaker() as session:
