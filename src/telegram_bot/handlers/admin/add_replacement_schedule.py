@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
 from aiogram_dialog.widgets.input import ManagedTextInput, TextInput
-from aiogram_dialog.widgets.kbd import Button, Column, Select
+from aiogram_dialog.widgets.kbd import Back, Button, Column, Select
 from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
 
@@ -39,13 +39,7 @@ async def get_groups(dbrepositories: DBRepositories, **kwargs):
 
     groups = await dbrepositories.group.get_groups()
     return {
-        "groups": [
-            {
-                "id": str(group.id),
-                "name": group.name,
-            }
-            for group in groups
-        ],
+        "groups": [{"id": str(group.id), "name": group.name} for group in groups],
     }
 
 
@@ -84,11 +78,7 @@ async def get_class_types(dbrepositories: DBRepositories, **kwargs):
     class_types = await dbrepositories.class_type.get_all()
     return {
         "class_types": [
-            {
-                "id": class_type.id,
-                "name": class_type.name,
-            }
-            for class_type in class_types
+            {"id": class_type.id, "name": class_type.name} for class_type in class_types
         ]
     }
 
@@ -99,11 +89,7 @@ async def get_audiences(dbrepositories: DBRepositories, **kwargs):
     audiences = await dbrepositories.audience.get_all()
     return {
         "audiences": [
-            {
-                "id": audience.id,
-                "name": audience.name,
-            }
-            for audience in audiences
+            {"id": audience.id, "name": audience.name} for audience in audiences
         ],
     }
 
@@ -183,10 +169,13 @@ async def on_audience_selected(
     await manager.done()
 
 
+back_button = Back(Const("◀️ Назад"))
+cancel_button = Button(Const("❌ Отменить"), id="cancel", on_click=on_cancel)
+
 add_schedule_dialog = Dialog(
     Window(
         Const("Введите дату (формат дд.мм.гггг):"),
-        Button(Const("Отменить"), id="cancel", on_click=on_cancel),
+        cancel_button,
         TextInput(
             id="date_input",
             on_success=on_date,
@@ -204,6 +193,7 @@ add_schedule_dialog = Dialog(
                 on_click=on_group_selected,
             )
         ),
+        back_button,
         state=AddScheduleSG.group,
         getter=get_groups,
     ),
@@ -218,6 +208,7 @@ add_schedule_dialog = Dialog(
                 on_click=on_class_selected,
             ),
         ),
+        back_button,
         state=AddScheduleSG.class_,
         getter=get_classes,
     ),
@@ -232,6 +223,7 @@ add_schedule_dialog = Dialog(
                 on_click=on_academic_subject_selected,
             ),
         ),
+        back_button,
         state=AddScheduleSG.academic_subject,
         getter=get_academic_subjects,
     ),
@@ -246,6 +238,7 @@ add_schedule_dialog = Dialog(
                 on_click=on_class_type_selected,
             ),
         ),
+        back_button,
         state=AddScheduleSG.class_type,
         getter=get_class_types,
     ),
@@ -260,6 +253,7 @@ add_schedule_dialog = Dialog(
                 on_click=on_audience_selected,
             ),
         ),
+        back_button,
         state=AddScheduleSG.audience,
         getter=get_audiences,
     ),
