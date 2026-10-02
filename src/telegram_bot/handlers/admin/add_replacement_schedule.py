@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
 from aiogram_dialog.widgets.input import ManagedTextInput, TextInput
-from aiogram_dialog.widgets.kbd import Back, Button, Column, Select
+from aiogram_dialog.widgets.kbd import Back, Button, Column, ScrollingGroup, Select
 from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
 
@@ -214,7 +214,7 @@ add_schedule_dialog = Dialog(
     ),
     Window(
         Const("Выберите учебный предмет:"),
-        Column(
+        ScrollingGroup(
             Select(
                 text=Format("{item[name]}"),
                 id="academic_subject_select",
@@ -222,6 +222,9 @@ add_schedule_dialog = Dialog(
                 items="academic_subjects",
                 on_click=on_academic_subject_selected,
             ),
+            id="academic_subjects_scroll",
+            width=1,
+            height=10,
         ),
         back_button,
         state=AddScheduleSG.academic_subject,
