@@ -92,8 +92,9 @@ async def message_full_name_handler(
     )
 
     await state.clear()
-    await event.answer(b("😸 Успешно вас зарегестрировал!"))
+    await event.answer(b("😸 Успешно вас зарегистрировал!"))
+    # TODO: лучше сначала отправить меню для пользователя, а потом отправлять уведолмение админам
     # Уведомляем админа
     for admin_id in settings.ADMIN_IDS:
-        await bot.send_message(admin_id, "😸 Зарегестрирован новый пользователь!")
+        await bot.send_message(admin_id, "😸 Зарегистрирован новый пользователь!")
     return await start_window().answer_window(event)
