@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, Message
@@ -11,6 +11,7 @@ from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
 
 from db.repositories import DBRepositories
+from telegram_bot.buttons.schedule import add_replacement_schedule_b
 
 add_replacement_schedule_router = Router()
 
@@ -265,8 +266,11 @@ add_schedule_dialog = Dialog(
 )
 
 
+@add_replacement_schedule_router.callback_query(
+    F.data == add_replacement_schedule_b.callback_data
+)
 @add_replacement_schedule_router.message(Command("add_replacement_schedule"))
-async def start_add(message: Message, dialog_manager: DialogManager):
+async def start_add(message: Message | CallbackQuery, dialog_manager: DialogManager):
     await dialog_manager.start(AddScheduleSG.date, mode=StartMode.RESET_STACK)
 
 

@@ -26,6 +26,9 @@ class_schedule_current_week_b = InlineKeyboardButton(
 class_schedule_next_week_b = InlineKeyboardButton(
     text="📅 Следующая неделя", callback_data="class_schedule:week:next_week"
 )
+add_replacement_schedule_b = InlineKeyboardButton(
+    text="Добавить расписание замен", callback_data="add_replacement_schedule"
+)
 
 
 def class_schedule_onday_b(

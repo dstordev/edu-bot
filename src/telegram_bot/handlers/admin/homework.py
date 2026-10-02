@@ -220,7 +220,7 @@ async def handler_homework_confirm(
 
     if is_confirm is False:
         await state.clear()
-        await start_window().answer_window(event)
+        await start_window(True).answer_window(event)
         return
 
     academic_subject_id: int | None = await state.get_value("academic_subject_id")

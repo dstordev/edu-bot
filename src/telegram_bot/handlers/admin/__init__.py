@@ -11,7 +11,9 @@ admin_router.callback_query.filter(IsAdminFilter())
 admin_router.message.filter(IsAdminFilter())
 
 admin_router.include_routers(
-    admin_homework_router, admin_presence_router, add_replacement_schedule_router
+    admin_homework_router,
+    admin_presence_router,
+    add_replacement_schedule_router,
 )
 
 __all__ = ["admin_router"]

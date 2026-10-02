@@ -11,6 +11,7 @@ from telegram_bot.buttons.presence import (
     presence_surveys_b,
 )
 from telegram_bot.buttons.schedule import (
+    add_replacement_schedule_b,
     class_schedule_b,
     class_schedule_current_week_b,
     class_schedule_next_week_b,
@@ -22,9 +23,11 @@ from telegram_bot.windows.info_window import InfoWindow
 from utils.datetime_format import TIME_FORMAT
 
 
-def start_window():
+def start_window(is_admin: bool):
     builder = InlineKeyboardBuilder()
     builder.add(class_schedule_b, homework_menu_b, ranepa_b)
+    if is_admin:
+        builder.add(add_replacement_schedule_b)
     builder.adjust(1)
 
     return InfoWindow(b("😼 Учебный помощник"), builder.as_markup())

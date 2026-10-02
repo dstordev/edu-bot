@@ -97,4 +97,6 @@ async def message_full_name_handler(
     # Уведомляем админа
     for admin_id in settings.ADMIN_IDS:
         await bot.send_message(admin_id, "😸 Зарегистрирован новый пользователь!")
-    return await start_window().answer_window(event)
+    return await start_window(event.from_user.id in settings.ADMIN_IDS).answer_window(
+        event
+    )
