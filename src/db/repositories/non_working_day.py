@@ -19,7 +19,7 @@ class NonWorkingDayRepository:
         result = await self.async_session.execute(
             select(NonWorkingDay).where(NonWorkingDay.day == day)
         )
-        return True if result.scalar() else False
+        return bool(result.scalar())
 
     async def get_non_working_days(self, *, limit: int) -> Sequence[NonWorkingDay]:
         result = await self.async_session.execute(
