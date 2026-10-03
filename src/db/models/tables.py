@@ -221,7 +221,12 @@ class NonWorkingDay(Base):
     __tablename__ = "non_working_day"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    day: Mapped[dt_date] = mapped_column(unique=True)
+    day: Mapped[dt_date]
+    group_id: Mapped[int | None] = mapped_column(ForeignKey("group.id"))
+
+    __table_args__ = (
+        UniqueConstraint("day", "group_id", name="uq_non_working_day_day_group_id"),
+    )
 
 
 class Homework(Base):

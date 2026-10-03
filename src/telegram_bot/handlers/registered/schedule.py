@@ -51,7 +51,7 @@ async def handler_class_schedule_day(
 
     # Проверка учебного дня
     non_working_day = await is_non_working_day(
-        day=target_day, dbrepositories=dbrepositories
+        group_id=student.group_id, day=target_day, dbrepositories=dbrepositories
     )
     if non_working_day is True:
         logger.info(

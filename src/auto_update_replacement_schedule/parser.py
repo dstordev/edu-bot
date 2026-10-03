@@ -1,4 +1,3 @@
-# parser.py
 import io
 import re
 from dataclasses import dataclass
@@ -16,13 +15,20 @@ class ParsedLessonDTO:
     class_start: time
     class_end: time
     subject_name: str
+    # TODO: Добавить возможность сущестования параметров ниже как None
     class_type_name: str
     audience_name: str
 
 
+@dataclass(slots=True)
+class NonWorkingDayLessonDTO:
+    date: date
+    group_name: str
+
+
 def parse_docx_bytes(
     file_bytes: bytes, target_date: date | None = None
-) -> tuple[date | None, list[ParsedLessonDTO]]:
+) -> tuple[date | None, list[ParsedLessonDTO | NonWorkingDayLessonDTO]]:
     """
     Синхронный парсинг DOCX. Выполняется в отдельном потоке (asyncio.to_thread).
     Возвращает найденную дату и список распарсенных сырых строк замен.
@@ -58,7 +64,7 @@ def parse_docx_bytes(
     if not schedule_date:
         return None, []
 
-    parsed_lessons: list[ParsedLessonDTO] = []
+    parsed_lessons: list[ParsedLessonDTO | NonWorkingDayLessonDTO] = []
 
     # 2. Парсинг строк
     for table in doc.tables:
@@ -71,7 +77,7 @@ def parse_docx_bytes(
             if len(cells_text) < 4 or not cells_text[0]:
                 continue
 
-            raw_group_name = cells_text[0][0]
+            raw_group_names = cells_text[0]
 
             try:
                 # Предмет и тип пары
@@ -84,6 +90,14 @@ def parse_docx_bytes(
                     )
                 else:
                     subject_name = subject_cell.strip()
+                    if "День самостоятельной работы" in subject_name:
+                        for raw_group_name in raw_group_names:
+                            parsed_lessons.append(
+                                NonWorkingDayLessonDTO(
+                                    date=schedule_date, group_name=raw_group_name
+                                )
+                            )
+                        continue
                     class_type_name = ""
 
                 # Время пары
@@ -103,19 +117,19 @@ def parse_docx_bytes(
                 # Аудитория
                 audience_name = cells_text[3][0] if cells_text[3] else ""
 
-                parsed_lessons.append(
-                    ParsedLessonDTO(
-                        date=schedule_date,
-                        group_name=raw_group_name,
-                        class_start=class_start_at,
-                        class_end=class_end_at,
-                        subject_name=subject_name,
-                        class_type_name=class_type_name,
-                        audience_name=audience_name,
+                for raw_group_name in raw_group_names:
+                    parsed_lessons.append(
+                        ParsedLessonDTO(
+                            date=schedule_date,
+                            group_name=raw_group_name,
+                            class_start=class_start_at,
+                            class_end=class_end_at,
+                            subject_name=subject_name,
+                            class_type_name=class_type_name,
+                            audience_name=audience_name,
+                        )
                     )
-                )
             except Exception as e:
                 logger.warning(f"Ошибка парсинга строки: {e}")
                 continue
-
     return schedule_date, parsed_lessons

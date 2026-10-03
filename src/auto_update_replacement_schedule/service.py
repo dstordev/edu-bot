@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from db.repositories._repositories import DBRepositories
 from utils.notify_students import notify_students_by_group
 
-from .parser import ParsedLessonDTO, parse_docx_bytes
+from .parser import NonWorkingDayLessonDTO, ParsedLessonDTO, parse_docx_bytes
 from .utils import (
     extract_date_from_filename,
     generate_request_id,
@@ -26,7 +26,7 @@ async def save_replacements_for_group(
     dbrepositories: DBRepositories,
     group_id: int,
     group_name: str,
-    lessons_dto: list[ParsedLessonDTO],
+    lessons_dto: list[ParsedLessonDTO | NonWorkingDayLessonDTO],
 ) -> int:
     """Сохраняет замены конкретной группы в БД с валидацией сущностей."""
 
@@ -34,6 +34,11 @@ async def save_replacements_for_group(
     group_lessons = [dto for dto in lessons_dto if group_name in dto.group_name]
 
     for dto in group_lessons:
+        if isinstance(dto, NonWorkingDayLessonDTO):
+            await dbrepositories.non_working_day.add(dto.date, group_id)
+            added_count += 1
+            continue
+
         class_ = await dbrepositories.class_.find_class_by_time(
             dto.class_start, dto.class_end
         )
@@ -234,6 +239,7 @@ async def check_schedule_updates(
                 await repos.replacement_schedule.delete_by_group_and_date(
                     group.id, schedule_date
                 )
+                await repos.non_working_day.delete(schedule_date, group.id)
 
                 added_count = await save_replacements_for_group(
                     dbrepositories=repos,

@@ -17,6 +17,9 @@ async def is_non_working_day(
     if result is False:
         if group_id is None:
             return False
+        # Также проверяем нерабочий день для одной группы
+        if await dbrepositories.non_working_day.is_non_working_day(day, group_id):
+            return True
         # Ещё проверяем расписание у этой группы
         # Проверяем в расписании замен
         result = await dbrepositories.replacement_schedule.get_group_lessons_by_day(
