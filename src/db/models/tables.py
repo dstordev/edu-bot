@@ -164,23 +164,23 @@ class _ScheduleMixin:
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
     class_id: Mapped[int] = mapped_column(ForeignKey("class.id"))
     academic_subject_id: Mapped[int] = mapped_column(ForeignKey("academic_subject.id"))
-    class_type_id: Mapped[int] = mapped_column(ForeignKey("class_type.id"))
-    audience_id: Mapped[int] = mapped_column(ForeignKey("audience.id"))
+    class_type_id: Mapped[int | None] = mapped_column(ForeignKey("class_type.id"))
+    audience_id: Mapped[int | None] = mapped_column(ForeignKey("audience.id"))
 
     @declared_attr
-    def academic_subject(cls):
+    def academic_subject(cls) -> Mapped[AcademicSubject]:
         return relationship("AcademicSubject")
 
     @declared_attr
-    def audience(cls):
+    def audience(cls) -> Mapped[Audience | None]:
         return relationship("Audience")
 
     @declared_attr
-    def class_(cls):
+    def class_(cls) -> Mapped[Class]:
         return relationship("Class")
 
     @declared_attr
-    def class_type_(cls):
+    def class_type_(cls) -> Mapped[ClassType | None]:
         return relationship("ClassType")
 
 

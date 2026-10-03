@@ -82,9 +82,8 @@ class DailyScheduleWindow(InfoWindow):
             class_start_at: str = format(class_info.class_.start_at, TIME_FORMAT)
             class_end_at: str = format(class_info.class_.end_at, TIME_FORMAT)
 
-            # 1. 08:30 - 10:00 | Ауд. не указана | Физкультура
             schedule_text_lines.append(
-                f"{b(class_info.class_.number)}. {code(class_start_at)} - {code(class_end_at)} | {class_info.academic_subject.name} | {class_info.audience.name} | {class_info.class_type_.name}"
+                f"{b(class_info.class_.number)}. {code(class_start_at)} - {code(class_end_at)} | {class_info.academic_subject.name} | {class_info.audience.name if class_info.audience else 'Ауд. не указана'} | {class_info.class_type_.name if class_info.class_type_ else 'Тип не указан'}"
             )
 
         formatted_date = format(day, DATE_FORMAT)

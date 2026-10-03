@@ -163,14 +163,14 @@ class ScheduleNotifier:
                     cls.number,
                     schedule.academic_subject.name,
                     cls.start_at,
-                    schedule.audience.name,
+                    schedule.audience.name if schedule.audience else None,
                 )
                 if is_start
                 else notification_end_at_window(
                     cls.number,
                     schedule.academic_subject.name,
                     cls.end_at,
-                    schedule.audience.name,
+                    schedule.audience.name if schedule.audience else None,
                     next_schedule,
                 )
             )

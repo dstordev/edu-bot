@@ -15,9 +15,8 @@ class ParsedLessonDTO:
     class_start: time
     class_end: time
     subject_name: str
-    # TODO: Добавить возможность сущестования параметров ниже как None
-    class_type_name: str
-    audience_name: str
+    class_type_name: str | None
+    audience_name: str | None
 
 
 @dataclass(slots=True)

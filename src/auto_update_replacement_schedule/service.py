@@ -49,21 +49,27 @@ async def save_replacements_for_group(
         if not subject:
             continue
 
-        class_type = await dbrepositories.class_type.find_by_name(dto.class_type_name)
-        if not class_type:
-            continue
+        class_type_id: int | None = None
+        if dto.class_type_name is not None and (
+            class_type := await dbrepositories.class_type.find_by_name(
+                dto.class_type_name
+            )
+        ):
+            class_type_id = class_type.id
 
-        audience = await dbrepositories.audience.find_by_name(dto.audience_name)
-        if not audience:
-            continue
+        audience_id: int | None = None
+        if dto.audience_name is not None and (
+            audience := await dbrepositories.audience.find_by_name(dto.audience_name)
+        ):
+            audience_id = audience.id
 
         await dbrepositories.replacement_schedule.add(
             date_=dto.date,
             group_id=group_id,
             class_id=class_.id,
             academic_subject_id=subject.id,
-            class_type_id=class_type.id,
-            audience_id=audience.id,
+            class_type_id=class_type_id,
+            audience_id=audience_id,
         )
         added_count += 1
 

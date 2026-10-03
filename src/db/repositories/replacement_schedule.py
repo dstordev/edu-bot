@@ -19,8 +19,8 @@ class ReplacementScheduleRepository:
         group_id: int,
         class_id: int,
         academic_subject_id: int,
-        class_type_id: int,
-        audience_id: int,
+        class_type_id: int | None,
+        audience_id: int | None,
     ) -> ReplacementSchedule:
         """Добавляет пару к расписанию в базу данных.
         Возвращает добавленный объект."""
