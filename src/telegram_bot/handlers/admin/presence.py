@@ -1,5 +1,4 @@
 import asyncio
-from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
@@ -11,6 +10,7 @@ from telegram_bot.filters import IsAdminFilter
 from telegram_bot.utils.html_format import b
 from telegram_bot.windows.presence import presence_check_window
 from telegram_bot.windows.registered import presence_window
+from utils.timezones import TZ_MOSCOW
 
 admin_presence_router = Router()
 
@@ -32,9 +32,7 @@ async def launch_presence_survey_handler(
         return logger.warning("Объект `Message` не ожидается как None.")
 
     survey = await dbrepositories.survey.create()
-    window = presence_check_window(
-        survey.id, survey.created_at.astimezone(ZoneInfo("Europe/Moscow"))
-    )
+    window = presence_check_window(survey.id, survey.created_at.astimezone(TZ_MOSCOW))
     group_data = await dbrepositories.group.find_by_name("25-Ф-12с")
     if group_data is None:
         return logger.warning("Не удалось найти группу в БД.")

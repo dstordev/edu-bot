@@ -1,5 +1,4 @@
 from datetime import datetime, time
-from zoneinfo import ZoneInfo
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
@@ -14,6 +13,7 @@ from db.models.tables import (
     Student,
 )
 from settings import settings
+from utils.timezones import TZ_MOSCOW
 
 TEST_DATABASE_URL = settings.TEST_POSTGRES_URL
 
@@ -92,7 +92,7 @@ async def test_class_type(db_session: AsyncSession) -> ClassType:
 @pytest_asyncio.fixture
 async def test_class(db_session: AsyncSession) -> Class:
     """Создает тестовое занятие"""
-    local_tzinfo = datetime.now(ZoneInfo("Europe/Moscow")).tzinfo
+    local_tzinfo = datetime.now(TZ_MOSCOW).tzinfo
 
     class_ = Class(
         number=1,

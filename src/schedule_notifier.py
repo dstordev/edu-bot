@@ -1,6 +1,5 @@
 from collections.abc import Generator
 from datetime import date, datetime, time, timedelta
-from zoneinfo import ZoneInfo
 
 from aiogram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -17,6 +16,7 @@ from telegram_bot.windows.registered import (
 )
 from utils.notify_students import notify_students_by_group_repos
 from utils.schedule import get_week_stars
+from utils.timezones import TZ_MOSCOW
 
 ScheduleItem = ReplacementSchedule | Schedule
 
@@ -46,9 +46,9 @@ class ScheduleNotifier:
     async def check_class_and_notify(self) -> None:
         """Проверяет пары через 5 минут и рассылает уведомления студентам."""
 
-        target_dt = (
-            datetime.now(ZoneInfo("Europe/Moscow")) + timedelta(minutes=5)
-        ).replace(second=0, microsecond=0)
+        target_dt = (datetime.now(TZ_MOSCOW) + timedelta(minutes=5)).replace(
+            second=0, microsecond=0
+        )
         target_date, target_time = target_dt.date(), target_dt.time()
 
         async with self.__async_sessionmaker() as session:

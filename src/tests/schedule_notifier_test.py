@@ -12,6 +12,7 @@ from db.models.tables import (
     ReplacementSchedule,
 )
 from db.repositories import DBRepositories
+from utils.timezones import TZ_MOSCOW
 
 
 # Проверка функции get_classes_by_time в из таблицы class.
@@ -76,8 +77,8 @@ async def test_replacement_schedule_get_by_day_and_stars(
 ):
     dbrepositories = DBRepositories(db_session)
 
-    dt = datetime(2000, 2, 5)
-    dt2 = datetime(2000, 2, 9)
+    dt = datetime(2000, 2, 5, tzinfo=TZ_MOSCOW)
+    dt2 = datetime(2000, 2, 9, tzinfo=TZ_MOSCOW)
 
     replacement_schedule = ReplacementSchedule(
         group_id=test_group.id,
@@ -118,7 +119,7 @@ async def test_replacement_schedule_get_upcoming_group_lessons(
     dbrepositories = DBRepositories(db_session)
 
     # Подготавливаем среду
-    dt = datetime(2000, 2, 5)
+    dt = datetime(2000, 2, 5, tzinfo=TZ_MOSCOW)
 
     # Создаем занятия
     class_ = Class(

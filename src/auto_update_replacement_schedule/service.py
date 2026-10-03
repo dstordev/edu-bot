@@ -1,7 +1,6 @@
 import asyncio
 import json
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 import aiohttp
 import websockets
@@ -12,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from db.repositories._repositories import DBRepositories
 from utils.notify_students import notify_students_by_group
+from utils.timezones import TZ_MOSCOW
 
 from .parser import NonWorkingDayLessonDTO, ParsedLessonDTO, parse_docx_bytes
 from .utils import (
@@ -193,7 +193,7 @@ async def check_schedule_updates(
             logger.error("[Worker] Не найдено ни одной группы в БД!")
             return
 
-    today = datetime.now(ZoneInfo("Europe/Moscow")).date()
+    today = datetime.now(TZ_MOSCOW).date()
 
     for file in files:
         filename = file["filename"]

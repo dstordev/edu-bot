@@ -1,4 +1,3 @@
-from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, InaccessibleMessage
@@ -14,6 +13,7 @@ from telegram_bot.windows.presence import (
     survey_window,
 )
 from telegram_bot.windows.registered import presence_window
+from utils.timezones import TZ_MOSCOW
 
 registered_presence_router = Router()
 
@@ -31,7 +31,7 @@ async def callback_presence_surveys_handler(
 
     # Перед отображением времени переводим его в локальную зону
     for survey in surveys:
-        survey.created_at = survey.created_at.astimezone(ZoneInfo("Europe/Moscow"))
+        survey.created_at = survey.created_at.astimezone(TZ_MOSCOW)
     await presence_surveys_window(surveys).answer_window(event)
 
 

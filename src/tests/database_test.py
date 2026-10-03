@@ -1,5 +1,4 @@
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,13 +15,14 @@ from db.models.tables import (
 )
 from db.repositories import DBRepositories
 from utils.schedule import get_week_stars
+from utils.timezones import TZ_MOSCOW
 
 
 @pytest.mark.asyncio
 async def test_is_non_working_day(db_session: AsyncSession):
     dbrepositories = DBRepositories(db_session)
 
-    day = datetime.now(ZoneInfo("Europe/Moscow")).date()
+    day = datetime.now(TZ_MOSCOW).date()
 
     non_working_day = NonWorkingDay(day=day)
     db_session.add(non_working_day)
@@ -48,7 +48,7 @@ async def test_get_group_lessons_by_day_replacement_schedule(
 ):
     dbrepositories = DBRepositories(db_session)
 
-    date_ = datetime(2026, 1, 9).date()
+    date_ = datetime(2026, 1, 9, tzinfo=TZ_MOSCOW).date()
     group_id = test_group.id
 
     replacement_schedule = ReplacementSchedule(
@@ -81,7 +81,7 @@ async def test_get_group_lessons_by_day_schedule(
 ):
     dbrepositories = DBRepositories(db_session)
 
-    dt = datetime(2026, 1, 9)
+    dt = datetime(2026, 1, 9, tzinfo=TZ_MOSCOW)
     dt_day = dt.weekday()
     dt_stars = len(get_week_stars(dt))
     group_id = test_group.id

@@ -22,6 +22,7 @@ from telegram_bot.handlers import global_router
 from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
 from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
+from utils.timezones import TZ_MOSCOW_RAW
 
 VERSION = "0.6.0"
 
@@ -31,14 +32,14 @@ logger.add(sys.stderr, level="DEBUG")
 logger.info(f"Версия приложения: {VERSION}")
 
 
-scheduler = AsyncIOScheduler(timezone="Europe/Moscow")
+scheduler = AsyncIOScheduler(timezone=TZ_MOSCOW_RAW)
 
 
 async def on_startup(bot: Bot, redis: Redis) -> None:
     # Запускаем проверку каждые 5 минут с 06:00 до 22:55
     scheduler.add_job(
         check_schedule_updates,
-        trigger=CronTrigger(minute="*/5", hour="6-22", timezone="Europe/Moscow"),
+        trigger=CronTrigger(minute="*/5", hour="6-22", timezone=TZ_MOSCOW_RAW),
         id="schedule_checker_job",
         name="Проверка расписания замен в telemost",
         kwargs={

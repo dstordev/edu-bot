@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
@@ -20,6 +19,7 @@ from telegram_bot.windows.schedule import (
     NextWeeklyScheduleWindow,
 )
 from utils.datetime_format import DATE_FORMAT
+from utils.timezones import TZ_MOSCOW
 
 registered_schedule_router = Router(name=__name__)
 
@@ -38,7 +38,7 @@ async def handler_class_schedule_day(
     assert len(cb_data) == 3
     selected_day = cb_data[2]
 
-    now_day = datetime.now(ZoneInfo("Europe/Moscow")).date()
+    now_day = datetime.now(TZ_MOSCOW).date()
     if selected_day == "today":
         target_day = now_day
     elif selected_day == "tomorrow":
@@ -102,7 +102,7 @@ async def handler_class_schedule_week(
 ):
     selected_week = event.data.split(":")[2]  # pyright: ignore[reportOptionalMemberAccess]
 
-    now_day = datetime.now(ZoneInfo("Europe/Moscow")).date()
+    now_day = datetime.now(TZ_MOSCOW).date()
     if selected_week == "current_week":
         helper_day = now_day
     elif selected_week == "next_week":

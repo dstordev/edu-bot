@@ -1,5 +1,4 @@
 from datetime import date, datetime
-from zoneinfo import ZoneInfo
 
 from pydantic import BaseModel, ConfigDict
 
@@ -9,6 +8,7 @@ from db.services.working_days import is_non_working_day
 from utils.date import get_week_days_from_date
 from utils.datetime_format import RU_WEEKDAY_NAMES
 from utils.schedule import get_week_stars
+from utils.timezones import TZ_MOSCOW
 
 
 # Расписание на день
@@ -33,7 +33,7 @@ class WeeklySchedule(BaseModel):
 async def get_daily_schedule(
     group_id: int, day: date, dbrepositories: DBRepositories
 ) -> DailySchedule:
-    now_day = datetime.now(ZoneInfo("Europe/Moscow")).date()
+    now_day = datetime.now(TZ_MOSCOW).date()
 
     schedule = await dbrepositories.replacement_schedule.get_group_lessons_by_day(
         group_id, day
