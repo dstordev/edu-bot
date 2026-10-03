@@ -331,7 +331,7 @@ class InfoWindow:
         text: str,
         keyboard: InlineKeyboardMarkup | None = None,
         parse_mode: ParseMode | None = ParseMode.HTML,
-    ) -> "InfoWindow":
+    ) -> InfoWindow:
         """Создать текстовое окно"""
         return cls(
             text=text,
@@ -346,7 +346,7 @@ class InfoWindow:
         caption: str = "",
         keyboard: InlineKeyboardMarkup | None = None,
         parse_mode: ParseMode | None = ParseMode.HTML,
-    ) -> "InfoWindow":
+    ) -> InfoWindow:
         """Создать окно с фото"""
         if isinstance(photo, str):
             photo = InputMediaPhoto(media=photo)
@@ -364,7 +364,7 @@ class InfoWindow:
         caption: str = "",
         keyboard: InlineKeyboardMarkup | None = None,
         parse_mode: ParseMode | None = ParseMode.HTML,
-    ) -> "InfoWindow":
+    ) -> InfoWindow:
         """Создать окно с документом"""
         if isinstance(document, str):
             document = InputMediaDocument(media=document)
@@ -398,48 +398,48 @@ class InfoWindowBuilder:
         self._disable_web_page_preview: bool = False
         self._media_strategy: MediaStrategy = MediaStrategy.DELETE_AND_SEND
 
-    def with_text(self, text: str) -> "InfoWindowBuilder":
+    def with_text(self, text: str) -> InfoWindowBuilder:
         """Установить текст"""
         self._text = text
         return self
 
-    def with_keyboard(self, keyboard: InlineKeyboardMarkup) -> "InfoWindowBuilder":
+    def with_keyboard(self, keyboard: InlineKeyboardMarkup) -> InfoWindowBuilder:
         """Установить клавиатуру"""
         self._keyboard = keyboard
         return self
 
-    def with_photo(self, photo: str | InputMediaPhoto) -> "InfoWindowBuilder":
+    def with_photo(self, photo: str | InputMediaPhoto) -> InfoWindowBuilder:
         """Добавить фото"""
         if isinstance(photo, str):
             photo = InputMediaPhoto(media=photo)
         self._media = photo
         return self
 
-    def with_document(self, document: str | InputMediaDocument) -> "InfoWindowBuilder":
+    def with_document(self, document: str | InputMediaDocument) -> InfoWindowBuilder:
         """Добавить документ"""
         if isinstance(document, str):
             document = InputMediaDocument(media=document)
         self._media = document
         return self
 
-    def with_video(self, video: str | InputMediaVideo) -> "InfoWindowBuilder":
+    def with_video(self, video: str | InputMediaVideo) -> InfoWindowBuilder:
         """Добавить видео"""
         if isinstance(video, str):
             video = InputMediaVideo(media=video)
         self._media = video
         return self
 
-    def with_parse_mode(self, parse_mode: ParseMode) -> "InfoWindowBuilder":
+    def with_parse_mode(self, parse_mode: ParseMode) -> InfoWindowBuilder:
         """Установить режим парсинга"""
         self._parse_mode = parse_mode
         return self
 
-    def disable_preview(self) -> "InfoWindowBuilder":
+    def disable_preview(self) -> InfoWindowBuilder:
         """Отключить превью ссылок"""
         self._disable_web_page_preview = True
         return self
 
-    def with_media_strategy(self, strategy: MediaStrategy) -> "InfoWindowBuilder":
+    def with_media_strategy(self, strategy: MediaStrategy) -> InfoWindowBuilder:
         """Установить стратегию работы с медиа"""
         self._media_strategy = strategy
         return self
