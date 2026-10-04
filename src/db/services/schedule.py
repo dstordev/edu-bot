@@ -4,7 +4,7 @@ from pydantic import BaseModel, ConfigDict
 
 from db.models.tables import ReplacementSchedule, Schedule
 from db.repositories import DBRepositories
-from db.services.working_days import is_non_working_day
+from db.services.working_days import is_non_working_day_and_no_schedule
 from utils.date import get_week_days_from_date
 from utils.datetime_format import RU_WEEKDAY_NAMES
 from utils.schedule import get_week_stars
@@ -52,7 +52,7 @@ async def get_daily_schedule(
         day_name=RU_WEEKDAY_NAMES[weekday],
         is_current_day=now_day == day,
         classes=list(schedule),
-        is_non_working_day=await is_non_working_day(
+        is_non_working_day=await is_non_working_day_and_no_schedule(
             group_id=group_id, day=day, dbrepositories=dbrepositories
         ),
     )

@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from db.models.tables import ReplacementSchedule, Schedule
 from db.repositories import DBRepositories
-from db.services.working_days import is_non_working_day
+from db.services.working_days import is_non_working_day_and_no_schedule
 from telegram_bot.windows.registered import (
     InfoWindow,
     notification_end_at_window,
@@ -54,7 +54,9 @@ class ScheduleNotifier:
         async with self.__async_sessionmaker() as session:
             repos = DBRepositories(session)
 
-            if await is_non_working_day(day=target_date, dbrepositories=repos):
+            if await is_non_working_day_and_no_schedule(
+                day=target_date, dbrepositories=repos
+            ):
                 return
 
             replacement_groups = await self.find_group_ids_in_replacement_schedules(

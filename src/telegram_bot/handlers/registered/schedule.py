@@ -53,7 +53,7 @@ async def handler_class_schedule_day(
     non_working_day = await is_non_working_day(
         group_id=student.group_id, day=target_day, dbrepositories=dbrepositories
     )
-    if non_working_day is True:
+    if non_working_day:
         logger.info(
             f"Не показываю расписание на {target_day} так как это нерабочий день."
         )
