@@ -32,6 +32,7 @@ async def error_handler(err_event: ErrorEvent, bot: Bot):
         if from_user.username:
             dev_error_text += f" | @{from_user.username}"
 
-    # Уведомляем разработчика об ошибке
+    # Уведомляем админов об ошибке
     logger.exception(dev_error_text)
-    await bot.send_message(settings.DEVELOPER_ID, dev_error_text)
+    for admin_id in settings.ADMIN_IDS:
+        await bot.send_message(admin_id, dev_error_text)

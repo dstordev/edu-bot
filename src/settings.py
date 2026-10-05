@@ -9,7 +9,6 @@ class Settings(BaseSettings):
     BOT_TOKEN: str
     TEST_POSTGRES_URL: str
     ADMIN_IDS: list[int]
-    DEVELOPER_ID: int
 
     DB_USER: str
     DB_PASSWORD: str

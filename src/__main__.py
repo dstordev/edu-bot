@@ -115,7 +115,6 @@ async def main() -> None:
     dp.workflow_data.update(
         async_sessmaker=async_sessmaker,
         ADMIN_IDS=settings.ADMIN_IDS,
-        DEVELOPER_ID=settings.DEVELOPER_ID,
         redis=redis_client,
     )
     await dp.start_polling(bot)
