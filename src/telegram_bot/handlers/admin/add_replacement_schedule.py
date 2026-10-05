@@ -12,6 +12,7 @@ from loguru import logger
 
 from db.repositories import DBRepositories
 from telegram_bot.buttons.schedule import add_replacement_schedule_b
+from utils.datetime_format import DATE_FORMAT
 
 add_replacement_schedule_router = Router()
 
@@ -102,7 +103,7 @@ async def on_date(
 
     try:
         # TODO: исправить предупреждение ruff о timezone
-        datetime.strptime(data, "%d.%m.%Y").date()  # noqa: DTZ007
+        datetime.strptime(data, DATE_FORMAT).date()  # noqa: DTZ007
     except Exception as ex:
         return logger.warning(f"Не удалось спарсить введенную дату: {ex}")
 
@@ -154,7 +155,7 @@ async def on_audience_selected(
     dbrepositories: DBRepositories = manager.middleware_data["dbrepositories"]
 
     # TODO: исправить предупреждение ruff о timezone
-    date_ = datetime.strptime(manager.dialog_data["date"], "%d.%m.%Y").date()
+    date_ = datetime.strptime(manager.dialog_data["date"], DATE_FORMAT).date()  # noqa: DTZ007
     group_id = int(manager.dialog_data["group"])
     class_id = int(manager.dialog_data["class_"])
     academic_subject_id = int(manager.dialog_data["academic_subject"])
