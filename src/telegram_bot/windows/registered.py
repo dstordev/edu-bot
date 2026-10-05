@@ -12,10 +12,6 @@ from telegram_bot.buttons.other import (
     ranepa_b,
     start_b,
 )
-from telegram_bot.buttons.presence import (
-    launch_presence_survey_b,
-    presence_surveys_b,
-)
 from telegram_bot.buttons.schedule import (
     add_replacement_schedule_b,
     class_schedule_b,
@@ -45,17 +41,6 @@ def admin_menu_window():
     builder.adjust(1)
 
     return InfoWindow(b("🏜️ Меню админа"), builder.as_markup())
-
-
-def presence_window(is_admin: bool):
-    builder = InlineKeyboardBuilder()
-    builder.add(presence_surveys_b)
-    if is_admin:
-        builder.add(launch_presence_survey_b)
-    builder.add(back_b(start_b))
-    builder.adjust(1)
-
-    return InfoWindow(b("📖 Присутствие"), builder.as_markup())
 
 
 def class_schedule_window():

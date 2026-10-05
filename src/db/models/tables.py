@@ -68,55 +68,6 @@ class Student(Base):
     )
 
 
-class Survey(Base):
-    """Модель опроса.
-
-    Хранит идентификатор опроса и метку времени создания записи.
-
-    Attributes:
-        id (int): Уникальный идентификатор записи (Primary Key).
-        created_at (datetime): Дата и время создания записи (автоматически при вставке).
-    """
-
-    __tablename__ = "survey"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-
-
-class SurveyData(Base):
-    """Модель данных прохождения опроса.
-
-    Хранит информацию о прохождении опроса конкретным студентом,
-    текущее состояние опроса и метки времени создания/обновления записи.
-
-    Attributes:
-        id (int): Уникальный идентификатор записи (Primary Key).
-        survey_id (int): Внешний ключ, указывающий на опрос (FK -> survey.id).
-        student_id (int): Внешний ключ, указывающий на студента (FK -> student.id).
-        state (int): Числовой статус или состояние прохождения опроса.
-        created_at (datetime): Дата и время создания записи (автоматически при вставке).
-        updated_at (datetime): Дата и время последнего обновления (автоматически при изм.).
-    """
-
-    __tablename__ = "survey_data"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    survey_id: Mapped[int] = mapped_column(ForeignKey("survey.id"))
-    student_id: Mapped[int] = mapped_column(ForeignKey("student.id"))
-    state: Mapped[int]
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        server_onupdate=func.now(),
-    )
-
-
 class Group(Base):
     __tablename__ = "group"
 
