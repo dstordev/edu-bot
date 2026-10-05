@@ -27,7 +27,7 @@ class_schedule_next_week_b = InlineKeyboardButton(
     text="📅 Следующая неделя", callback_data="class_schedule:week:next_week"
 )
 add_replacement_schedule_b = InlineKeyboardButton(
-    text="Добавить расписание замен", callback_data="add_replacement_schedule"
+    text="➕ Добавить расписание замен", callback_data="add_replacement_schedule"
 )
 
 

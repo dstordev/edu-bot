@@ -4,8 +4,14 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.models.tables import AcademicSubject, ReplacementSchedule, Schedule
-from telegram_bot.buttons.homework import homework_menu_b
-from telegram_bot.buttons.other import academic_subject_b, back_b, ranepa_b, start_b
+from telegram_bot.buttons.homework import homework_add_b, homework_menu_b
+from telegram_bot.buttons.other import (
+    academic_subject_b,
+    admin_menu_b,
+    back_b,
+    ranepa_b,
+    start_b,
+)
 from telegram_bot.buttons.presence import (
     launch_presence_survey_b,
     presence_surveys_b,
@@ -27,10 +33,18 @@ def start_window(is_admin: bool):
     builder = InlineKeyboardBuilder()
     builder.add(class_schedule_b, homework_menu_b, ranepa_b)
     if is_admin:
-        builder.add(add_replacement_schedule_b)
+        builder.add(admin_menu_b)
     builder.adjust(1)
 
     return InfoWindow(b("😼 Учебный помощник"), builder.as_markup())
+
+
+def admin_menu_window():
+    builder = InlineKeyboardBuilder()
+    builder.add(add_replacement_schedule_b, homework_add_b, back_b(start_b))
+    builder.adjust(1)
+
+    return InfoWindow(b("🏜️ Меню админа"), builder.as_markup())
 
 
 def presence_window(is_admin: bool):

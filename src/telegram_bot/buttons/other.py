@@ -16,7 +16,9 @@ skip_b = InlineKeyboardButton(text="▶️ Пропустить", callback_data=
 confirm_b = InlineKeyboardButton(text="✅ Подтвердить", callback_data="confirm")
 cancel_b = InlineKeyboardButton(text="❌ Отменить", callback_data="cancel")
 
+# TODO: тут можно добавить параметр disabled
 empty_b = InlineKeyboardButton(text="", callback_data="_")
+admin_menu_b = InlineKeyboardButton(text="🏜️ Меню админа", callback_data="admin_menu")
 
 
 def back_b(inline_button: InlineKeyboardButton) -> InlineKeyboardButton:

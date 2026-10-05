@@ -8,7 +8,9 @@ from db.models.tables import AcademicSubject
 homework_menu_b = InlineKeyboardButton(
     text="📙 Домашние задания", callback_data="homework_menu", style=ButtonStyle.PRIMARY
 )
-homework_add_b = InlineKeyboardButton(text="➕ Добавить", callback_data="homework:add")
+homework_add_b = InlineKeyboardButton(
+    text="➕ Добавить домашнее задание", callback_data="homework:add"
+)
 
 
 def homework_unfinished_b(page_index: int = 0):

@@ -6,7 +6,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from db.models.tables import AcademicSubject, Group, Homework
 from telegram_bot.buttons.homework import (
     complete_homework_b,
-    homework_add_b,
     homework_b,
     homework_finished_b,
     homework_menu_b,
@@ -29,13 +28,9 @@ from telegram_bot.windows.info_window import InfoWindow
 from utils.datetime_format import DATE_FORMAT
 
 
-def homework_menu_window(*, add_btn: bool = False):
+def homework_menu_window():
     builder = InlineKeyboardBuilder()
-    if add_btn:
-        builder.add(homework_add_b)
-    builder.add(homework_unfinished_b())
-    builder.add(homework_finished_b())
-    builder.add(start_b)
+    builder.add(homework_unfinished_b(), homework_finished_b(), start_b)
     builder.adjust(1)
 
     return InfoWindow(b(homework_menu_b.text), builder.as_markup())

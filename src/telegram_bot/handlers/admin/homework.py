@@ -14,4 +14,4 @@ async def handler_homework_menu(event: CallbackQuery):
     Отправляет меню с кнопкой админа для добавления домашнего задания.
     """
 
-    await homework_menu_window(add_btn=True).answer_window(event)
+    await homework_menu_window().answer_window(event)
