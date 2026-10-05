@@ -187,9 +187,7 @@ async def check_schedule_updates(
 
     files = await get_files(study_chat_id, session_id, user_id)
     if not files:
-        logger.debug("[Worker] Файлы отсутствуют")
         return
-    logger.debug(f"[Worker] Получил файлы: {files}")
 
     # Получаем группу из БД
     async with async_sessmaker() as session:
@@ -213,7 +211,6 @@ async def check_schedule_updates(
         # ПРОВЕРКА В REDIS: обрабатывали ли мы уже этот файл?
         cache_key = f"processed_schedule_file:{file_path}"
         if await redis.exists(cache_key):
-            logger.debug(f"Файл {file} есть в редис, скипаем")
             continue
 
         logger.info(f"[Worker] Обнаружен новый файл: {filename}. Скачиваем...")
