@@ -19,7 +19,8 @@ async def command_start_handler_registered(
     # Чтобы избежать предупреждений pyright и ruff
     if not event.from_user:
         return
-    await state.clear()
     if dialog_manager.has_context():
-        await dialog_manager.done()
+        await dialog_manager.reset_stack()
+    else:
+        await state.clear()
     await start_window(event.from_user.id in settings.ADMIN_IDS).answer_window(event)

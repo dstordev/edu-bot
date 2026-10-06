@@ -1,11 +1,31 @@
 from aiogram import Bot, Router, html
+from aiogram.filters import ExceptionTypeFilter
 from aiogram.types import ErrorEvent
+from aiogram_dialog.api.exceptions import OutdatedIntent, UnknownIntent
 from loguru import logger
 
 from settings import settings
 from telegram_bot.utils.html_format import b, blockquote, code
 
 error_router = Router(name=__name__)
+
+
+@error_router.errors(ExceptionTypeFilter(UnknownIntent, OutdatedIntent))
+async def on_intent_error(event: ErrorEvent):
+    # Если ошибку вызвал клик по старой кнопке
+    if event.update.callback_query:
+        await event.update.callback_query.answer(
+            "😺 Это сообщение устарело. Откройте меню заново", show_alert=True
+        )
+
+        # Удаляем "мёртвое" сообщение, чтобы по нему больше не кликали
+        try:
+            if event.update.callback_query.message:
+                await event.update.callback_query.message.delete()
+        except Exception:
+            pass
+
+    return True
 
 
 @error_router.error()

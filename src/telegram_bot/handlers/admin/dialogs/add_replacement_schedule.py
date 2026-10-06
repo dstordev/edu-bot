@@ -1,49 +1,24 @@
 from datetime import datetime
 
-from aiogram import F, Router
-from aiogram.filters import Command
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import Dialog, DialogManager, StartMode, Window
-from aiogram_dialog.widgets.input import ManagedTextInput, TextInput
-from aiogram_dialog.widgets.kbd import Back, Button, Column, ScrollingGroup, Select
+from aiogram.types import CallbackQuery
+from aiogram_dialog import Dialog, DialogManager, Window
+from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.kbd import Column, ScrollingGroup, Select
 from aiogram_dialog.widgets.text import Const, Format
-from loguru import logger
 
 from db.repositories import DBRepositories
-from telegram_bot.buttons.schedule import add_replacement_schedule_b
+from telegram_bot.handlers.admin.getters import get_academic_subjects, get_groups
+from telegram_bot.handlers.admin.handlers import (
+    on_academic_subject_selected,
+    on_date,
+    on_group_selected,
+)
+from telegram_bot.handlers.admin.states import AddScheduleSG
+from telegram_bot.handlers.admin.widgets import back_button, cancel_button
 from utils.datetime_format import DATE_FORMAT
-
-add_replacement_schedule_router = Router()
-
-
-class AddScheduleSG(StatesGroup):
-    date = State()  # Дата пары
-    group = State()  # Группа пары
-    class_ = State()  # Номер пары
-    academic_subject = State()  # Учебный предмет
-    class_type = State()  # Тип пары (лекция, практика)
-    audience = State()  # Аудитория
-
-
-async def on_cancel(callback: CallbackQuery, button: Button, manager: DialogManager):
-    """Обработчик отмены диалога."""
-
-    await callback.answer("Отменено")
-    await callback.message.delete()
-    await manager.done()
 
 
 # === Геттеры ===
-async def get_groups(dbrepositories: DBRepositories, **kwargs):
-    """Геттер для получения групп."""
-
-    groups = await dbrepositories.group.get_groups()
-    return {
-        "groups": [{"id": str(group.id), "name": group.name} for group in groups],
-    }
-
-
 async def get_classes(dbrepositories: DBRepositories, **kwargs):
     """Геттер для получения номеров пар."""
 
@@ -57,18 +32,6 @@ async def get_classes(dbrepositories: DBRepositories, **kwargs):
                 "end_at": class_.end_at,
             }
             for class_ in classes
-        ]
-    }
-
-
-async def get_academic_subjects(dbrepositories: DBRepositories, **kwargs):
-    """Геттер для получения учебных предметов."""
-
-    academic_subjects = await dbrepositories.academic_subject.get_all(limit=20)
-    return {
-        "academic_subjects": [
-            {"id": academic_subject.id, "name": academic_subject.name}
-            for academic_subject in academic_subjects
         ]
     }
 
@@ -96,45 +59,12 @@ async def get_audiences(dbrepositories: DBRepositories, **kwargs):
 
 
 # === Обработчики ===
-async def on_date(
-    message: Message, widget: ManagedTextInput[str], manager: DialogManager, data: str
-):
-    """Обработчик ввода даты."""
-
-    try:
-        # TODO: исправить предупреждение ruff о timezone
-        datetime.strptime(data, DATE_FORMAT).date()  # noqa: DTZ007
-    except Exception as ex:
-        return logger.warning(f"Не удалось спарсить введенную дату: {ex}")
-
-    manager.dialog_data["date"] = data
-    await manager.next()
-
-
-async def on_group_selected(
-    callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
-):
-    """Обработчик выбора группы."""
-
-    manager.dialog_data["group"] = item_id
-    await manager.next()
-
-
 async def on_class_selected(
     callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
 ):
     """Обработчик выбора пары."""
 
     manager.dialog_data["class_"] = item_id
-    await manager.next()
-
-
-async def on_academic_subject_selected(
-    callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
-):
-    """Обработчик выбора учебного предмета."""
-
-    manager.dialog_data["academic_subject"] = item_id
     await manager.next()
 
 
@@ -166,21 +96,18 @@ async def on_audience_selected(
         date_, group_id, class_id, academic_subject_id, class_type_id, audience_id
     )
 
-    await callback.message.edit_text(f"Пара добавлена, id: {r.id}")
+    await callback.answer(f"Пара добавлена, id: {r.id}", show_alert=True)
     await manager.done()
 
-
-back_button = Back(Const("◀️ Назад"))
-cancel_button = Button(Const("❌ Отменить"), id="cancel", on_click=on_cancel)
 
 add_schedule_dialog = Dialog(
     Window(
         Const("Введите дату (формат дд.мм.гггг):"),
-        cancel_button,
         TextInput(
             id="date_input",
             on_success=on_date,
         ),
+        cancel_button,
         state=AddScheduleSG.date,
     ),
     Window(
@@ -262,14 +189,3 @@ add_schedule_dialog = Dialog(
         getter=get_audiences,
     ),
 )
-
-
-@add_replacement_schedule_router.callback_query(
-    F.data == add_replacement_schedule_b.callback_data
-)
-@add_replacement_schedule_router.message(Command("add_replacement_schedule"))
-async def start_add(message: Message | CallbackQuery, dialog_manager: DialogManager):
-    await dialog_manager.start(AddScheduleSG.date, mode=StartMode.RESET_STACK)
-
-
-add_replacement_schedule_router.include_router(add_schedule_dialog)
