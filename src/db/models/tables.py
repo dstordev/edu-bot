@@ -1,5 +1,4 @@
-from datetime import date as dt_date
-from datetime import datetime, time
+from datetime import date, datetime, time
 from typing import Any
 
 from sqlalchemy import (
@@ -23,13 +22,9 @@ class TIME_HM(TypeDecorator):
     cache_ok = True
 
     def process_bind_param(self, value: time | Any, dialect) -> time | None:
-        """Перед записью в БД: переводим всё в UTC"""
-
         return value.replace(second=0, microsecond=0)
 
     def process_result_value(self, value: time | Any, dialect) -> time | None:
-        """После чтения из БД: переводим в локальное время ОС"""
-
         return value.replace(second=0, microsecond=0)
 
 
@@ -149,7 +144,7 @@ class ReplacementSchedule(_ScheduleMixin, Base):
 
     __tablename__ = "replacement_schedule"
 
-    date: Mapped[dt_date]  # ISO format YYYY-MM-DD
+    date: Mapped[date]  # ISO format YYYY-MM-DD
 
 
 class ClassType(Base):
@@ -172,7 +167,7 @@ class NonWorkingDay(Base):
     __tablename__ = "non_working_day"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    day: Mapped[dt_date]
+    day: Mapped[date]
     group_id: Mapped[int | None] = mapped_column(ForeignKey("group.id"))
 
     __table_args__ = (
@@ -186,7 +181,7 @@ class Homework(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     academic_subject_id: Mapped[int] = mapped_column(ForeignKey("academic_subject.id"))
     text: Mapped[str]
-    assignment_date: Mapped[dt_date | None]
+    assignment_date: Mapped[date | None]
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
 
     group = relationship("Group")
