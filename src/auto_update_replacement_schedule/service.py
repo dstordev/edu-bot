@@ -10,6 +10,8 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from db.repositories._repositories import DBRepositories
+from telegram_bot.utils.html_format import b, blockquote, code, i
+from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES
 from utils.notify_students import notify_students_by_group
 from utils.timezones import TZ_MOSCOW
 
@@ -263,9 +265,22 @@ async def check_schedule_updates(
                 logger.debug(
                     "[Worker] Начинаю уведомление студентов о новом расписании..."
                 )
+                # подготовка данных для красивой даты
+                d = {0: "сегодня", -1: "завтра", -2: "послезавтра"}
+                now_d = datetime.now(TZ_MOSCOW).date()
+                ed = now_d - schedule_date
+                d_name = d.get(ed.days)
+
+                weekday_name = RU_WEEKDAY_NAMES[schedule_date.weekday()].lower()
+                schedule_date_beuatufy = code(f"{schedule_date.strftime(DATE_FORMAT)}")
+                ####
+
                 total, failed = await notify_students_by_group(
                     group.id,
-                    f"😺 Обновлено расписание на {schedule_date}!",
+                    b(
+                        f"😺 Обновлено расписание\n"
+                        f"{blockquote(f'Дата: {schedule_date_beuatufy} {i(f"({(str(d_name) + ', ') if d_name else ''}{weekday_name})")}')}"
+                    ),
                     async_sessmaker,
                     bot,
                 )
