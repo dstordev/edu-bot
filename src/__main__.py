@@ -19,6 +19,9 @@ from db.connect import async_sessmaker
 from schedule_notifier import ScheduleNotifier
 from settings import settings
 from telegram_bot.handlers import global_router
+from telegram_bot.middlewares.activity_students_middleware import (
+    ActivityStudentsMiddleware,
+)
 from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
 from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
@@ -94,6 +97,9 @@ async def main() -> None:
 
     global_router.message.middleware.register(LoggerMiddleware())
     global_router.callback_query.middleware.register(LoggerMiddleware())
+
+    global_router.message.outer_middleware.register(ActivityStudentsMiddleware())
+    global_router.callback_query.outer_middleware.register(ActivityStudentsMiddleware())
     dp.include_router(global_router)
 
     setup_dialogs(dp)

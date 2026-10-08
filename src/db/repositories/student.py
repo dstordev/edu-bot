@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models.tables import Student
@@ -52,3 +52,8 @@ class StudentRepository:
         )
         async for row in async_result:
             yield row[0]
+
+    async def mark_activity(self, student_id: int, is_active: bool) -> None:
+        await self.async_session.execute(
+            update(Student).where(Student.id == student_id).values(is_active=is_active)
+        )

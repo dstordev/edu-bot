@@ -1,6 +1,7 @@
 from datetime import date, datetime, time
 from typing import Any
 
+import sqlalchemy as sa
 from sqlalchemy import (
     BigInteger,
     DateTime,
@@ -53,6 +54,7 @@ class Student(Base):
     surname: Mapped[str] = mapped_column(String(30))
     patronymic: Mapped[str | None] = mapped_column(String(30))
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
+    is_active: Mapped[bool] = mapped_column(server_default=sa.true())
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
