@@ -1,4 +1,5 @@
 from aiogram import Bot
+from aiogram.exceptions import AiogramError
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
@@ -40,7 +41,7 @@ async def notify_students_by_group_repos(
         count += 1
         try:
             await bot.send_message(chat_id=student.telegram_id, text=text)
-        except Exception as ex:
+        except AiogramError as ex:
             count_error += 1
             logger.error(
                 f"[Notify] При отправке сообщения студенту произошла ошибка: {ex}"
