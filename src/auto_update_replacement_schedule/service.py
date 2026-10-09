@@ -220,6 +220,9 @@ async def check_schedule_updates(
             file_bytes = await download_file(file_path, session_id)
         except aiohttp.ClientResponseError as e:
             if e.status == 404:
+                logger.error(
+                    f"[Worker] Ошибка при скачивании {filename}, возможно файл удален, выставляем как битый на 5 дней: {e}"
+                )
                 # Если файл не найден и возможно удален, то помечаем файл в Redis как битый (TTL 5 дней)
                 await redis.set(cache_key, "invalid", ex=432000)
                 continue
