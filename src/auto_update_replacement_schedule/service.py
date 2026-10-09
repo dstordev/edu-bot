@@ -218,6 +218,15 @@ async def check_schedule_updates(
         logger.info(f"[Worker] Обнаружен новый файл: {filename}. Скачиваем...")
         try:
             file_bytes = await download_file(file_path, session_id)
+        except aiohttp.ClientResponseError as e:
+            if e.status == 404:
+                # Если файл не найден и возможно удален, то помечаем файл в Redis как битый (TTL 5 дней)
+                await redis.set(cache_key, "invalid", ex=432000)
+                continue
+            logger.error(
+                f"[Worker] Ошибка при скачивании {filename} (ClientResponseError): {e}"
+            )
+            continue
         except Exception as e:
             logger.error(f"[Worker] Ошибка при скачивании {filename}: {e}")
             continue
