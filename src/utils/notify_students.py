@@ -11,6 +11,8 @@ async def notify_students_by_group(
     text: str,
     async_sessmaker: async_sessionmaker[AsyncSession],
     bot: Bot,
+    *,
+    filter_enabled_reminder_5min: bool,
 ) -> tuple[int, int]:
     """
     Рассылает студентам указанной группе указаный текст.
@@ -19,7 +21,13 @@ async def notify_students_by_group(
 
     async with async_sessmaker.begin() as session:
         repos = DBRepositories(session)
-        return await notify_students_by_group_repos(group_id, text, repos, bot)
+        return await notify_students_by_group_repos(
+            group_id,
+            text,
+            repos,
+            bot,
+            filter_enabled_reminder_5min=filter_enabled_reminder_5min,
+        )
 
 
 async def notify_students_by_group_repos(
@@ -27,6 +35,8 @@ async def notify_students_by_group_repos(
     text: str,
     dbrepositories: DBRepositories,
     bot: Bot,
+    *,
+    filter_enabled_reminder_5min: bool,
 ) -> tuple[int, int]:
     """
     (Версия с передачей готовой dbrepositories)
@@ -43,6 +53,27 @@ async def notify_students_by_group_repos(
         has_err = False
 
         if student.is_active:
+            # Если включен фильтр рассылки по стуеднтам с включенным reminder_5min
+            if filter_enabled_reminder_5min:
+                try:
+                    student_settings = await dbrepositories.student_settings.find(
+                        student.id
+                    )
+                except Exception as ex:
+                    logger.error(
+                        f"Не удалось выполнить запрос поиска настроек студента: {ex}"
+                    )
+                    # Если ошибка то все равно отправляем сообщение
+                else:
+                    if student_settings:
+                        # Если reminder_5min отключен, то отправку этому пользователю пропускаем
+                        if not student_settings.reminder_5min:
+                            continue
+                    else:
+                        logger.warning(
+                            f"Для студента {student.id} не удалось найти запись в настройках студенов. На всякий случай отправляем сообщение."
+                        )
+
             try:
                 await bot.send_message(chat_id=student.telegram_id, text=text)
             except TelegramForbiddenError:

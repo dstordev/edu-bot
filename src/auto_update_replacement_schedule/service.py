@@ -295,6 +295,7 @@ async def check_schedule_updates(
                     ),
                     async_sessmaker,
                     bot,
+                    filter_enabled_reminder_5min=False,
                 )
                 logger.debug(
                     f"[Worker] Уведомление студентов закончено. Успешно отправлено: {total - failed}/{total}"

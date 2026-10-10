@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.models.tables import StudentSettings
@@ -21,3 +21,10 @@ class StudentSettingsRepository:
             select(StudentSettings).where(StudentSettings.student_id == student_id)
         )
         return r.scalar_one_or_none()
+
+    async def set_reminder_5min(self, student_id: int, enabled: bool) -> None:
+        await self.async_session.execute(
+            update(StudentSettings)
+            .where(StudentSettings.student_id == student_id)
+            .values(reminder_5min=enabled)
+        )

@@ -72,6 +72,7 @@ class StudentSettings(Base):
 
     student_id: Mapped[int] = mapped_column(ForeignKey("student.id"), primary_key=True)
     # TODO: добавить пункт про уведомления за 5 мин.
+    reminder_5min: Mapped[bool] = mapped_column(server_default=sa.true())
 
 
 class Group(Base):
