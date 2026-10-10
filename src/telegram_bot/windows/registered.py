@@ -11,6 +11,7 @@ from telegram_bot.buttons.other import (
     back_b,
     ranepa_b,
     start_b,
+    student_settings_b,
 )
 from telegram_bot.buttons.schedule import (
     add_replacement_schedule_b,
@@ -27,7 +28,7 @@ from utils.datetime_format import TIME_FORMAT
 
 def start_window(is_admin: bool):
     builder = InlineKeyboardBuilder()
-    builder.add(class_schedule_b, homework_menu_b, ranepa_b)
+    builder.add(class_schedule_b, homework_menu_b, ranepa_b, student_settings_b)
     if is_admin:
         builder.add(admin_menu_b)
     builder.adjust(1)

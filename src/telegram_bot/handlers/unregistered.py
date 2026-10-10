@@ -83,13 +83,14 @@ async def message_full_name_handler(
 
     group_id = (await state.get_data())["group_id"]
 
-    await dbrepositories.student.create(
+    student_id = await dbrepositories.student.create(
         telegram_id=event.from_user.id,
         surname=surname,
         name=name,
         patronymic=patronymic,
         group_id=group_id,
     )
+    await dbrepositories.student_settings.add(student_id)
 
     await state.clear()
     await event.answer(b("😸 Успешно вас зарегистрировал!"))

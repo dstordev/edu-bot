@@ -65,6 +65,15 @@ class Student(Base):
     )
 
 
+class StudentSettings(Base):
+    """Таблица настроек пользователей."""
+
+    __tablename__ = "student_settings"
+
+    student_id: Mapped[int] = mapped_column(ForeignKey("student.id"), primary_key=True)
+    # TODO: добавить пункт про уведомления за 5 мин.
+
+
 class Group(Base):
     __tablename__ = "group"
 

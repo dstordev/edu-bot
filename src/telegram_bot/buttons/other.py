@@ -19,6 +19,9 @@ cancel_b = InlineKeyboardButton(text="❌ Отменить", callback_data="canc
 # TODO: тут можно добавить параметр disabled
 empty_b = InlineKeyboardButton(text="", callback_data="_")
 admin_menu_b = InlineKeyboardButton(text="🏜️ Меню админа", callback_data="admin_menu")
+student_settings_b = InlineKeyboardButton(
+    text="⚙️ Настройки", callback_data="student_settings"
+)
 
 
 def back_b(inline_button: InlineKeyboardButton) -> InlineKeyboardButton:
