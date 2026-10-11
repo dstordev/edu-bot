@@ -11,6 +11,7 @@ from .replacement_schedule import ReplacementScheduleRepository
 from .schedule import ScheduleRepository
 from .student import StudentRepository
 from .student_homework import StudentHomeworkRepository
+from .student_settings import StudentSettingsRepository
 
 
 class DBRepositories:
@@ -26,3 +27,4 @@ class DBRepositories:
         self.student_homework = StudentHomeworkRepository(async_session)
         self.homework = HomeworkRepository(async_session)
         self.class_type = ClassTypeRepository(async_session)
+        self.student_settings = StudentSettingsRepository(async_session)

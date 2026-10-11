@@ -85,7 +85,11 @@ class ScheduleNotifier:
             ):
                 logger.debug(f"Запускаю уведомление группы {group_id} о расписании...")
                 total, failed = await notify_students_by_group_repos(
-                    group_id, window.text, repos, self.__bot
+                    group_id,
+                    window.text,
+                    repos,
+                    self.__bot,
+                    filter_enabled_reminder_5min=True,
                 )
                 logger.debug(
                     f"Уведомление группы закончено. Успешно отправлено: {total - failed}/{total}"
