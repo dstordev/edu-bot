@@ -9,8 +9,10 @@ from loguru import logger
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.repositories._repositories import DBRepositories
+from db.models.tables import ReplacementSchedule
+from db.repositories import DBRepositories
 from telegram_bot.utils.html_format import b, blockquote, code, i
+from telegram_bot.windows.schedule import DailyScheduleWindow
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES
 from utils.notify_students import notify_students_by_group
 from utils.timezones import TZ_MOSCOW
@@ -29,12 +31,13 @@ async def save_replacements_for_group(
     group_id: int,
     group_name: str,
     lessons_dto: list[ParsedLessonDTO | NonWorkingDayLessonDTO],
-) -> int:
+) -> tuple[int, list[ReplacementSchedule] | NonWorkingDayLessonDTO]:
     """Сохраняет замены конкретной группы в БД с валидацией сущностей."""
 
     added_count = 0
     group_lessons = [dto for dto in lessons_dto if group_name in dto.group_name]
 
+    proc_schedules: list[ReplacementSchedule] = []
     for dto in group_lessons:
         if isinstance(dto, NonWorkingDayLessonDTO):
             await dbrepositories.non_working_day.add(dto.date, group_id)
@@ -65,7 +68,7 @@ async def save_replacements_for_group(
         ):
             audience_id = audience.id
 
-        await dbrepositories.replacement_schedule.add(
+        rep_schedule = await dbrepositories.replacement_schedule.add(
             date_=dto.date,
             group_id=group_id,
             class_id=class_.id,
@@ -73,9 +76,12 @@ async def save_replacements_for_group(
             class_type_id=class_type_id,
             audience_id=audience_id,
         )
+        proc_schedules.append(rep_schedule)
         added_count += 1
 
-    return added_count
+    if added_count == 1 and isinstance(group_lessons[0], NonWorkingDayLessonDTO):
+        return added_count, group_lessons[0]
+    return added_count, proc_schedules
 
 
 async def get_files(
@@ -258,7 +264,7 @@ async def check_schedule_updates(
                 )
                 await repos.non_working_day.delete(schedule_date, group.id)
 
-                added_count = await save_replacements_for_group(
+                added_count, proc_schedules = await save_replacements_for_group(
                     dbrepositories=repos,
                     group_id=group.id,
                     group_name=group.name,
@@ -287,11 +293,21 @@ async def check_schedule_updates(
                 schedule_date_beuatufy = code(f"{schedule_date.strftime(DATE_FORMAT)}")
                 ####
 
+                if isinstance(proc_schedules, NonWorkingDayLessonDTO):
+                    daily_schedule_text = b("Неучебный день")
+                else:
+                    daily_schedule_text = DailyScheduleWindow(
+                        class_schedule=proc_schedules,
+                        day=schedule_date,
+                        weekday=schedule_date.weekday(),
+                    ).text.split("\n\n")[-1]
+
                 total, failed = await notify_students_by_group(
                     group.id,
-                    b(
-                        f"😺 Обновлено расписание\n"
-                        f"{blockquote(f'Дата: {schedule_date_beuatufy} {i(f"({(str(d_name) + ', ') if d_name else ''}{weekday_name})")}')}"
+                    (
+                        f"{b('😺 Обновлено расписание')}\n"
+                        f"{b(f'{blockquote(f"Дата: {schedule_date_beuatufy} {i(f'({(str(d_name) + ", ") if d_name else ""}{weekday_name})')}")}\n\n')}"
+                        f"{daily_schedule_text}"
                     ),
                     async_sessmaker,
                     bot,

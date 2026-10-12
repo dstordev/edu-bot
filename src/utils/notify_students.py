@@ -3,7 +3,7 @@ from aiogram.exceptions import AiogramError, TelegramForbiddenError
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.repositories._repositories import DBRepositories
+from db.repositories import DBRepositories
 
 
 async def notify_students_by_group(

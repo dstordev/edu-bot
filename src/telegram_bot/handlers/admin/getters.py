@@ -1,4 +1,4 @@
-from db.repositories._repositories import DBRepositories
+from db.repositories import DBRepositories
 
 
 async def get_groups(dbrepositories: DBRepositories, **kwargs):
