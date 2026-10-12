@@ -1,3 +1,3 @@
 from ._repositories import DBRepositories
 
-all = [DBRepositories]
+__all__ = ["DBRepositories"]

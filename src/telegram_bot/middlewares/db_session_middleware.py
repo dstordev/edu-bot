@@ -5,7 +5,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.repositories._repositories import DBRepositories
+from db.repositories import DBRepositories
 
 
 class DbSessionMiddleware(BaseMiddleware):

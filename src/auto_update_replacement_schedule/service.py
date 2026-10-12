@@ -9,7 +9,7 @@ from loguru import logger
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.repositories._repositories import DBRepositories
+from db.repositories import DBRepositories
 from telegram_bot.utils.html_format import b, blockquote, code, i
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES
 from utils.notify_students import notify_students_by_group
