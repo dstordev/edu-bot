@@ -23,9 +23,8 @@ class ReplacementScheduleRepository:
         audience_id: int | None,
     ) -> ReplacementSchedule:
         """Добавляет пару к расписанию в базу данных.
-        Возвращает добавленный объект."""
+        Возвращает добавленный объект с загруженными связями."""
 
-        # TODO: добавить проверку на дублирование пары с один день у одной группы с одинаковым class_id.
         result = await self.async_session.execute(
             insert(ReplacementSchedule)
             .values(
@@ -36,9 +35,23 @@ class ReplacementScheduleRepository:
                 class_type_id=class_type_id,
                 audience_id=audience_id,
             )
-            .returning(ReplacementSchedule)
+            .returning(ReplacementSchedule.id)
         )
-        return result.scalar_one()
+        inserted_id = result.scalar_one()
+
+        select_stmt = (
+            select(ReplacementSchedule)
+            .where(ReplacementSchedule.id == inserted_id)
+            .options(
+                joinedload(ReplacementSchedule.class_),
+                joinedload(ReplacementSchedule.academic_subject),
+                joinedload(ReplacementSchedule.audience),
+                joinedload(ReplacementSchedule.class_type_),
+            )
+        )
+
+        final_result = await self.async_session.execute(select_stmt)
+        return final_result.scalar_one()
 
     async def get_by_day(self, date_: date) -> Sequence[ReplacementSchedule]:
         """Возвращает расписание по дню недели."""
