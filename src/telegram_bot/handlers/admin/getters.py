@@ -13,7 +13,7 @@ async def get_groups(dbrepositories: DBRepositories, **kwargs):
 async def get_academic_subjects(dbrepositories: DBRepositories, **kwargs):
     """Геттер для получения учебных предметов."""
 
-    academic_subjects = await dbrepositories.academic_subject.get_all(limit=20)
+    academic_subjects = await dbrepositories.academic_subject.get_all(limit=40)
     return {
         "academic_subjects": [
             {"id": academic_subject.id, "name": academic_subject.name}
