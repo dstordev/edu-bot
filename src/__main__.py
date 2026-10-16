@@ -56,6 +56,8 @@ async def on_startup(bot: Bot, redis: Redis) -> None:
         max_instances=1,  # Защита: следующий запуск не начнется, пока идет предыдущий
         coalesce=True,  # Если бот завис, пропущенные запуски объединятся в один
     )
+
+    # Единая точка запуска job'ов
     scheduler.start()
     logger.debug("APScheduler запущен.")
 
@@ -105,7 +107,7 @@ async def main() -> None:
     setup_dialogs(dp)
 
     logger.debug("Запускаю ScheduleNotifier...")
-    ScheduleNotifier(bot, async_sessmaker).run_monitor()
+    ScheduleNotifier(bot, async_sessmaker).register_job(scheduler)
 
     logger.debug("Регистрирую запуск автообновления расписания...")
     dp.startup.register(on_startup)
