@@ -13,10 +13,10 @@ from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
 from redis.asyncio import Redis
 
-from auto_update_replacement_schedule.service import check_schedule_updates
 from checks import check_postgres_connection, check_redis_connection
 from db.connect import async_sessmaker
-from schedule_notifier import ScheduleNotifier
+from services.auto_update_replacement_schedule.service import check_schedule_updates
+from services.schedule_notifier import ScheduleNotifier
 from settings import settings
 from telegram_bot.handlers import global_router
 from telegram_bot.middlewares.activity_students_middleware import (

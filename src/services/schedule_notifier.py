@@ -29,6 +29,7 @@ class ScheduleNotifier:
     ) -> None:
         self.__bot = bot
         self.__async_sessionmaker = async_sessionmaker
+        # TODO: передавать уже объявленый шедулер из __main__.py
         self.__scheduler = AsyncIOScheduler()
 
     def run_monitor(self) -> None:
