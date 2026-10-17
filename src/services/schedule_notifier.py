@@ -25,23 +25,23 @@ class ScheduleNotifier:
     """Контролирует рассылку уведомлений студентам о начале и конце пар."""
 
     def __init__(
-        self, bot: Bot, async_sessionmaker: async_sessionmaker[AsyncSession]
+        self,
+        bot: Bot,
+        async_sessionmaker: async_sessionmaker[AsyncSession],
     ) -> None:
         self.__bot = bot
         self.__async_sessionmaker = async_sessionmaker
-        self.__scheduler = AsyncIOScheduler()
 
-    def run_monitor(self) -> None:
+    def register_job(self, scheduler: AsyncIOScheduler) -> None:
         """Запускает фоновый планировщик проверки расписания каждую минуту."""
 
-        self.__scheduler.add_job(
+        scheduler.add_job(
             self.check_class_and_notify,
             "interval",
             minutes=1,
             max_instances=1,
             coalesce=True,
         )
-        self.__scheduler.start()
 
     async def check_class_and_notify(self) -> None:
         """Проверяет пары через 5 минут и рассылает уведомления студентам."""
