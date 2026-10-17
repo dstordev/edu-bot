@@ -1,18 +1,22 @@
-FROM python:3.14.7
+FROM python:3.14.8-slim-bookworm
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 WORKDIR /app
 
-# Download the latest installer
-ADD https://astral.sh/uv/install.sh /uv-installer.sh
-# Run the installer then remove it
-RUN sh /uv-installer.sh && rm /uv-installer.sh
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    PYTHONPATH=/app/src \
+    PATH="/app/.venv/bin:$PATH"
 
-ENV PATH="/root/.local/bin:$PATH"
-ENV PATH="/app/.venv/bin:$PATH"
+COPY pyproject.toml uv.lock ./
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --no-dev
 
 COPY . .
 
-RUN uv sync --frozen
-ENV PYTHONPATH /app/src
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-dev
 
-# Сначала миграции, потом запуск бота:
-CMD ["sh", "-c", "uv run alembic upgrade head && uv run src/"]
+CMD ["sh", "-c", "alembic upgrade head && python -m src"]

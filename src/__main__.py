@@ -13,10 +13,10 @@ from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
 from redis.asyncio import Redis
 
-from auto_update_replacement_schedule.service import check_schedule_updates
 from checks import check_postgres_connection, check_redis_connection
 from db.connect import async_sessmaker
-from schedule_notifier import ScheduleNotifier
+from services.auto_update_replacement_schedule.service import check_schedule_updates
+from services.schedule_notifier import ScheduleNotifier
 from settings import settings
 from telegram_bot.handlers import global_router
 from telegram_bot.middlewares.activity_students_middleware import (
@@ -27,7 +27,7 @@ from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
 from utils.timezones import TZ_MOSCOW_RAW
 
-VERSION = "0.7.0"
+VERSION = "0.8.0"
 
 logger.remove()
 logger.add(sys.stderr, level="DEBUG")
@@ -56,8 +56,14 @@ async def on_startup(bot: Bot, redis: Redis) -> None:
         max_instances=1,  # Защита: следующий запуск не начнется, пока идет предыдущий
         coalesce=True,  # Если бот завис, пропущенные запуски объединятся в один
     )
+
+    # Единая точка запуска job'ов
     scheduler.start()
     logger.debug("APScheduler запущен.")
+
+    logger.debug("Уведомляем админов о запуске...")
+    for admin_id in settings.ADMIN_IDS:
+        await bot.send_message(admin_id, f"😸 Бот запущен на версии {VERSION}.")
 
 
 async def on_shutdown() -> None:
@@ -105,7 +111,7 @@ async def main() -> None:
     setup_dialogs(dp)
 
     logger.debug("Запускаю ScheduleNotifier...")
-    ScheduleNotifier(bot, async_sessmaker).run_monitor()
+    ScheduleNotifier(bot, async_sessmaker).register_job(scheduler)
 
     logger.debug("Регистрирую запуск автообновления расписания...")
     dp.startup.register(on_startup)
