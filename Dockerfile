@@ -19,4 +19,4 @@ COPY . .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
-CMD ["sh", "-c", "alembic upgrade head && python -m src"]
+CMD ["python", "-m", "src"]
