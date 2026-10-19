@@ -1,9 +1,7 @@
-from datetime import date
-
 from aiogram.types import InlineKeyboardButton, InputMediaUnion
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from db.models.tables import AcademicSubject, Group, Homework
+from db.models.tables import Homework
 from telegram_bot.buttons.homework import (
     complete_homework_b,
     homework_b,
@@ -14,16 +12,8 @@ from telegram_bot.buttons.homework import (
     homework_unfinished_b,
     view_homework_files_b,
 )
-from telegram_bot.buttons.other import (
-    back_b,
-    cancel_b,
-    confirm_b,
-    empty_b,
-    skip_b,
-    start_b,
-)
-from telegram_bot.buttons.unregistered import group_button
-from telegram_bot.utils.html_format import b, blockquote, code
+from telegram_bot.buttons.other import back_b, empty_b, start_b
+from telegram_bot.utils.html_format import b, blockquote
 from telegram_bot.windows.info_window import InfoWindow
 from utils.datetime_format import DATE_FORMAT
 
@@ -34,92 +24,6 @@ def homework_menu_window():
     builder.adjust(1)
 
     return InfoWindow(b(homework_menu_b.text), builder.as_markup())
-
-
-# окошко для ввода текста ДЗ
-def text_homework_window(*, back_btn: InlineKeyboardButton):
-    builder = InlineKeyboardBuilder()
-    builder.add(back_b(back_btn))
-
-    return InfoWindow(
-        b("✏️ Введите текст домашнего задания:"),
-        inline_keyboard_markup=builder.as_markup(),
-    )
-
-
-def file_or_photo_window(*, back_btn: InlineKeyboardButton):
-    builder = InlineKeyboardBuilder()
-    builder.add(skip_b, back_b(back_btn))
-    builder.adjust(1)
-
-    return InfoWindow(
-        b(
-            "✏️ Отправьте фотографию или документ, чтобы прикрепить их к домашнему заданию"
-        ),
-        inline_keyboard_markup=builder.as_markup(),
-    )
-
-
-# окошко для ввода даты назначения ДЗ
-def homework_assignment_date_window(*, back_btn: InlineKeyboardButton):
-    builder = InlineKeyboardBuilder()
-    builder.add(skip_b, back_b(back_btn))
-    builder.adjust(1)
-
-    return InfoWindow(
-        b("✏️ Введите дату, когда задали задание:"),
-        inline_keyboard_markup=builder.as_markup(),
-    )
-
-
-# Окошко для ввода группы при добавлении ДЗ
-def homework_input_group_window(*, groups: list[Group], back_btn: InlineKeyboardButton):
-    builder = InlineKeyboardBuilder()
-
-    for group in groups:
-        group_b = group_button(group.name, group.id)
-        builder.add(group_b)
-
-    builder.add(back_b(back_btn))
-
-    builder.adjust(1)
-    return InfoWindow(
-        b("✏️ Выберите группу:"), inline_keyboard_markup=builder.as_markup()
-    )
-
-
-# окошко для подтверджения дз
-def homework_confirm_window(
-    *,
-    academic_subject: AcademicSubject,
-    text: str,
-    assignment_date: date | None = None,
-):
-    builder = InlineKeyboardBuilder()
-    builder.add(confirm_b, cancel_b)
-    builder.adjust(2)
-
-    message_text = f"{b('✏️ Вот так выглядит домашнее задание. Создаем?')}\n\n"
-    if assignment_date:
-        message_text += (
-            f"- Предмет: {academic_subject.name}\n"
-            f"- Дата назначения: {format(assignment_date, DATE_FORMAT)}\n"
-            f"- Текст: {code(text)}"
-        )
-    else:
-        message_text += f"- Предмет: {academic_subject.name}\n- Текст: {code(text)}"
-
-    return InfoWindow(message_text, inline_keyboard_markup=builder.as_markup())
-
-
-def homework_created_window():
-    builder = InlineKeyboardBuilder()
-    builder.add(start_b)
-
-    return InfoWindow(
-        b("Домашнее задание успешно записано"),
-        inline_keyboard_markup=builder.as_markup(),
-    )
 
 
 def unfinished_homework_window(

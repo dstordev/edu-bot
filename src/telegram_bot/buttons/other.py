@@ -7,15 +7,6 @@ ranepa_b = InlineKeyboardButton(
 
 start_b = InlineKeyboardButton(text="⏪ Главное меню", callback_data="start")
 
-images_b = InlineKeyboardButton(text="🖼 Изображения", callback_data="images")
-
-files_b = InlineKeyboardButton(text="📁 Файлы", callback_data="files")
-
-skip_b = InlineKeyboardButton(text="▶️ Пропустить", callback_data="skip")
-
-confirm_b = InlineKeyboardButton(text="✅ Подтвердить", callback_data="confirm")
-cancel_b = InlineKeyboardButton(text="❌ Отменить", callback_data="cancel")
-
 # TODO: тут можно добавить параметр disabled
 empty_b = InlineKeyboardButton(text="", callback_data="_")
 admin_menu_b = InlineKeyboardButton(text="🏜️ Меню админа", callback_data="admin_menu")
