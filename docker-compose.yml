@@ -36,6 +36,22 @@ services:
       timeout: 3s
       retries: 5
 
+  migration:
+    build: .
+    restart: "no"
+    command: ["alembic", "upgrade", "head"]
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - REDIS_HOST=redis
+      - TZ=Europe/Moscow
+    networks:
+      - app_net
+    depends_on:
+      db:
+        condition: service_healthy
+
   bot:
     build: .
     restart: always
@@ -52,6 +68,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migration:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:

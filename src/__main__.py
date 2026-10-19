@@ -28,7 +28,7 @@ from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
 from telegram_bot.utils.html_format import code
 from utils.timezones import TZ_MOSCOW_RAW
 
-VERSION = "0.8.0"
+VERSION = "0.8.1"
 
 logger.remove()
 logger.add(sys.stderr, level="DEBUG")
