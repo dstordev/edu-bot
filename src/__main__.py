@@ -25,6 +25,7 @@ from telegram_bot.middlewares.activity_students_middleware import (
 from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
 from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
+from telegram_bot.utils.html_format import code
 from utils.timezones import TZ_MOSCOW_RAW
 
 VERSION = "0.8.0"
@@ -63,7 +64,7 @@ async def on_startup(bot: Bot, redis: Redis) -> None:
 
     logger.debug("Уведомляем админов о запуске...")
     for admin_id in settings.ADMIN_IDS:
-        await bot.send_message(admin_id, f"😸 Бот запущен на версии {VERSION}.")
+        await bot.send_message(admin_id, f"😸 Бот запущен на версии {code(VERSION)}!")
 
 
 async def on_shutdown() -> None:
