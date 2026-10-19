@@ -38,7 +38,6 @@ services:
 
   bot:
     build: .
-    image: ghcr.io/dstordev/edu-bot:latest
     restart: always
     env_file:
       - .env
