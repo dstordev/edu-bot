@@ -26,6 +26,7 @@ from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
 from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
 from telegram_bot.utils.html_format import code
+from utils.notify.admins import notify_admins
 from utils.timezones import TZ_MOSCOW_RAW
 
 VERSION = "0.8.1"
@@ -63,8 +64,7 @@ async def on_startup(bot: Bot, redis: Redis) -> None:
     logger.debug("APScheduler запущен.")
 
     logger.debug("Уведомляем админов о запуске...")
-    for admin_id in settings.ADMIN_IDS:
-        await bot.send_message(admin_id, f"😸 Бот запущен на версии {code(VERSION)}!")
+    await notify_admins(f"😸 Бот запущен на версии {code(VERSION)}!", bot)
 
 
 async def on_shutdown() -> None:

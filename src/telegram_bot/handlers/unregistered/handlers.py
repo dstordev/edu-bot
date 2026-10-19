@@ -8,6 +8,7 @@ from loguru import logger
 from db.repositories import DBRepositories
 from telegram_bot.handlers.registered.general import command_start_handler_registered
 from telegram_bot.utils.html_format import b
+from utils.notify.admins import notify_admins
 
 
 async def on_group_token(
@@ -36,7 +37,6 @@ async def on_student_name(
         return
 
     repos: DBRepositories = manager.middleware_data["dbrepositories"]
-    admin_ids: list = manager.middleware_data["ADMIN_IDS"]
     bot: Bot = manager.middleware_data["bot"]
     state: FSMContext = manager.middleware_data["state"]
     group_id: int = manager.dialog_data["group_id"]
@@ -70,8 +70,7 @@ async def on_student_name(
     await message.answer(b("😸 Успешно вас зарегистрировал!"))
 
     # Уведомление админов
-    for admin_id in admin_ids:
-        await bot.send_message(admin_id, "😸 Зарегистрирован новый пользователь!")
+    await notify_admins(b("😸 Зарегистрирован новый пользователь!"), bot)
 
     # Редирект в главное меню
     await manager.done()

@@ -5,8 +5,8 @@ from aiogram.types import ErrorEvent, Message
 from aiogram_dialog.api.exceptions import OutdatedIntent, UnknownIntent
 from loguru import logger
 
-from settings import settings
 from telegram_bot.utils.html_format import b, blockquote, code
+from utils.notify.admins import notify_admins
 
 error_router = Router(name=__name__)
 
@@ -58,10 +58,4 @@ async def error_handler(err_event: ErrorEvent, bot: Bot):
 
     # Уведомляем админов об ошибке
     logger.exception(dev_error_text)
-    for admin_id in settings.ADMIN_IDS:
-        try:
-            await bot.send_message(admin_id, dev_error_text)
-        except AiogramError as ex:
-            logger.error(
-                f"Не удалось отправить сообщение о произошедей ошибке админу {admin_id}: {ex}"
-            )
+    await notify_admins(dev_error_text, bot)
