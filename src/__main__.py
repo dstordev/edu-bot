@@ -61,6 +61,10 @@ async def on_startup(bot: Bot, redis: Redis) -> None:
     scheduler.start()
     logger.debug("APScheduler запущен.")
 
+    logger.debug("Уведомляем админов о запуске...")
+    for admin_id in settings.ADMIN_IDS:
+        await bot.send_message(admin_id, f"😸 Бот запущен на версии {VERSION}.")
+
 
 async def on_shutdown() -> None:
     scheduler.shutdown(wait=False)
