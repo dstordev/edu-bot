@@ -14,7 +14,7 @@ from db.repositories import DBRepositories
 from telegram_bot.utils.html_format import b, blockquote, code, i
 from telegram_bot.windows.schedule import DailyScheduleWindow
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES
-from utils.notify_students import notify_students_by_group
+from utils.notify.students import notify_students_by_group
 from utils.timezones import TZ_MOSCOW
 
 from .parser import NonWorkingDayLessonDTO, ParsedLessonDTO, parse_docx_bytes
