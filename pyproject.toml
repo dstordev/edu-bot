@@ -18,3 +18,19 @@ dependencies = [
     "python-docx>=1.2.0",
     "dateparser>=1.4.3",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.17.0",
+]
+
+[tool.ruff]
+include = ["*.py"]
+force-exclude = true
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "UP", "B", "I", "ANN"]
+
+[tool.ruff.format]
+quote-style = "double"
