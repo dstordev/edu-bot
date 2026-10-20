@@ -1,6 +1,6 @@
 from typing import Any
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.enums import ContentType
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (
@@ -9,9 +9,9 @@ from aiogram.types import (
     InputMediaPhoto,
     MediaUnion,
 )
-from aiogram_dialog import Dialog, DialogManager, StartMode, Window
+from aiogram_dialog import Dialog, DialogManager, ShowMode, Window
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
-from aiogram_dialog.widgets.kbd import Button, Column, Row, Select, SwitchTo
+from aiogram_dialog.widgets.kbd import Button, Cancel, Column, Row, Select, SwitchTo
 from aiogram_dialog.widgets.media import DynamicMedia
 from aiogram_dialog.widgets.text import Const, Format
 
@@ -22,9 +22,6 @@ from telegram_bot.buttons.homework import (
     homework_finished_b,
     homework_menu_b,
     homework_unfinished_b,
-)
-from telegram_bot.handlers.registered.general import (
-    command_start_handler_registered,
 )
 from telegram_bot.utils.html_format import b, blockquote
 from utils.datetime_format import DATE_FORMAT
@@ -60,22 +57,7 @@ def format_homework_detail(homework: Homework) -> str:
     return "\n".join(lines)
 
 
-# --- Точка входа ---
-
-
-@registered_homework_router.callback_query(F.data == homework_menu_b.callback_data)
-async def handler_homework_menu(event: CallbackQuery, dialog_manager: DialogManager) -> None:
-    await dialog_manager.start(HomeworkSG.menu, mode=StartMode.RESET_STACK)
-
-
 # --- Обработчики действий ---
-
-
-async def on_back_to_main_menu(
-    callback: CallbackQuery, button: Button, manager: DialogManager
-) -> None:
-    state = manager.middleware_data["state"]
-    await command_start_handler_registered(callback, state, manager)
 
 
 async def on_open_list(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
@@ -172,6 +154,8 @@ async def on_view_files(callback: CallbackQuery, button: Button, manager: Dialog
             )
         )
         await callback.message.answer_media_group(photos)
+        manager.show_mode = ShowMode.SEND
+        await callback.answer()
 
     if homework.homework_file:
         files: list[MediaUnion] = [
@@ -184,6 +168,8 @@ async def on_view_files(callback: CallbackQuery, button: Button, manager: Dialog
             )
         )
         await callback.message.answer_media_group(files)
+        manager.show_mode = ShowMode.SEND
+        await callback.answer()
 
     await callback.answer()
 
@@ -280,7 +266,7 @@ dialog = Dialog(
             id="finished",
             on_click=on_open_list,
         ),
-        Button(Const("◀️ Главное меню"), id="to_menu", on_click=on_back_to_main_menu),
+        Cancel(Const("◀️ Главное меню")),
         state=HomeworkSG.menu,
     ),
     # 2. Список заданий

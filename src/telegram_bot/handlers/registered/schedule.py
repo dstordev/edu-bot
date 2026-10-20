@@ -1,12 +1,12 @@
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.enums import ButtonStyle
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
-from aiogram_dialog import Dialog, DialogManager, StartMode, Window
-from aiogram_dialog.widgets.kbd import Back, Button, Column, Row, Select
+from aiogram_dialog import Dialog, DialogManager, Window
+from aiogram_dialog.widgets.kbd import Back, Button, Cancel, Column, Row, Select
 from aiogram_dialog.widgets.style import Style
 from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
@@ -15,11 +15,7 @@ from db.repositories import DBRepositories
 from db.services.schedule import DailySchedule, get_daily_schedule, get_weekly_schedule
 from db.services.working_days import is_non_working_day
 from telegram_bot.buttons.schedule import (
-    class_schedule_b,
     class_schedule_onday_b,
-)
-from telegram_bot.handlers.registered.general import (
-    command_start_handler_registered,
 )
 from telegram_bot.utils.html_format import b, code, i
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES, TIME_FORMAT
@@ -69,14 +65,6 @@ def format_daily_schedule(daily_schedule: DailySchedule) -> str:
     return f"{b(f'📅 Расписание на {weekday} {date_str}')}\n\n" + "\n".join(lines)
 
 
-# --- Точка входа ---
-
-
-@registered_schedule_router.callback_query(F.data == class_schedule_b.callback_data)
-async def handler_class_schedule_b(event: CallbackQuery, dialog_manager: DialogManager) -> None:
-    await dialog_manager.start(ScheduleSG.main, mode=StartMode.RESET_STACK)
-
-
 # --- Обработчики действий ---
 
 
@@ -86,11 +74,6 @@ async def on_back_from_day(callback: CallbackQuery, button: Button, manager: Dia
         await manager.switch_to(ScheduleSG.week_schedule)
     else:
         await manager.switch_to(ScheduleSG.main)
-
-
-async def on_back_to_menu(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
-    state = manager.middleware_data["state"]
-    await command_start_handler_registered(callback, state, manager)
 
 
 async def on_week_schedule(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
@@ -206,7 +189,7 @@ dialog = Dialog(
                 on_click=on_day_schedule,
             ),
         ),
-        Button(Const("◀️ Назад"), id="back_to_menu", on_click=on_back_to_menu),
+        Cancel(Const("◀️ Назад")),
         state=ScheduleSG.main,
     ),
     Window(
