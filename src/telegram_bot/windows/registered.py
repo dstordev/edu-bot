@@ -5,21 +5,9 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from db.models.tables import ReplacementSchedule, Schedule
 from metadata import VERSION
 from telegram_bot.buttons.homework import homework_menu_b
-from telegram_bot.buttons.other import (
-    admin_menu_b,
-    back_b,
-    ranepa_b,
-    start_b,
-    student_settings_b,
-)
-from telegram_bot.buttons.schedule import (
-    class_schedule_b,
-    class_schedule_current_week_b,
-    class_schedule_next_week_b,
-    class_schedule_today_b,
-    class_schedule_tomorrow_b,
-)
-from telegram_bot.utils.html_format import b, blockquote, code, i
+from telegram_bot.buttons.other import admin_menu_b, ranepa_b, student_settings_b
+from telegram_bot.buttons.schedule import class_schedule_b
+from telegram_bot.utils.html_format import b, blockquote, code
 from telegram_bot.windows.info_window import InfoWindow
 from utils.datetime_format import TIME_FORMAT
 
@@ -34,20 +22,6 @@ def start_window(is_admin: bool):
     return InfoWindow(
         b("😼 Учебный помощник\n") + blockquote(f"Версия: v{VERSION}"), builder.as_markup()
     )
-
-
-def class_schedule_window():
-    builder = InlineKeyboardBuilder()
-    builder.add(
-        class_schedule_current_week_b,
-        class_schedule_next_week_b,
-        class_schedule_today_b,
-        class_schedule_tomorrow_b,
-        back_b(start_b),
-    )
-    builder.adjust(1, 1, 2)
-
-    return InfoWindow(f"{b('🗓️ Расписание')}", builder.as_markup())
 
 
 def notification_start_at_window(

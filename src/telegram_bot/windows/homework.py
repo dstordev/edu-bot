@@ -40,9 +40,7 @@ def unfinished_homework_window(
             )
         )
     if page_index > 0:
-        builder.add(
-            homework_previous_page_b(htype="unfinished", page_index=page_index - 1)
-        )
+        builder.add(homework_previous_page_b(htype="unfinished", page_index=page_index - 1))
     else:
         builder.add(empty_b)
     builder.add(homework_next_page_b(htype="unfinished", page_index=page_index + 1))
@@ -68,18 +66,14 @@ def finished_homework_window(
             )
         )
     if page_index > 0:
-        builder.add(
-            homework_previous_page_b(htype="finished", page_index=page_index - 1)
-        )
+        builder.add(homework_previous_page_b(htype="finished", page_index=page_index - 1))
     else:
         builder.add(empty_b)
     builder.add(homework_next_page_b(htype="finished", page_index=page_index + 1))
     builder.add(back_b(back_btn))
     builder.adjust(*[1 for _ in range(len(homeworks))], 2, 1)
 
-    return InfoWindow(
-        b("🟢 Ваши выполненные задания:"), inline_keyboard_markup=builder.as_markup()
-    )
+    return InfoWindow(b("🟢 Ваши выполненные задания:"), inline_keyboard_markup=builder.as_markup())
 
 
 def homework_window(
@@ -100,11 +94,7 @@ def homework_window(
 
     message_text = f"{b('📌 Домашнее задание')}\n"
     if homework.assignment_date:
-        message_text += (
-            f"— Дата назначения: {format(homework.assignment_date, DATE_FORMAT)}\n"
-        )
-    message_text += (
-        f"— Предмет: {homework.academic_subject.name}\n\n{blockquote(homework.text)}"
-    )
+        message_text += f"— Дата назначения: {format(homework.assignment_date, DATE_FORMAT)}\n"
+    message_text += f"— Предмет: {homework.academic_subject.name}\n\n{blockquote(homework.text)}"
 
     return InfoWindow(message_text, builder.as_markup(), media=media)
