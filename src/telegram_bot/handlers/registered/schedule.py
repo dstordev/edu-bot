@@ -1,134 +1,235 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
+from typing import Any
 
 from aiogram import F, Router
+from aiogram.enums import ButtonStyle
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
+from aiogram_dialog import Dialog, DialogManager, StartMode, Window
+from aiogram_dialog.widgets.kbd import Back, Button, Column, Row, Select
+from aiogram_dialog.widgets.style import Style
+from aiogram_dialog.widgets.text import Const, Format
 from loguru import logger
 
 from db.repositories import DBRepositories
-from db.services.schedule import get_daily_schedule, get_weekly_schedule
+from db.services.schedule import DailySchedule, get_daily_schedule, get_weekly_schedule
 from db.services.working_days import is_non_working_day
 from telegram_bot.buttons.schedule import (
     class_schedule_b,
-    class_schedule_current_week_b,
-    class_schedule_next_week_b,
+    class_schedule_onday_b,
 )
-from telegram_bot.windows.registered import class_schedule_window
-from telegram_bot.windows.schedule import (
-    CurrentWeeklyScheduleWindow,
-    DailyScheduleWindow,
-    NextWeeklyScheduleWindow,
+from telegram_bot.handlers.registered.general import (
+    command_start_handler_registered,
 )
-from utils.datetime_format import DATE_FORMAT
+from telegram_bot.utils.html_format import b, code, i
+from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES, TIME_FORMAT
 from utils.timezones import TZ_MOSCOW
 
 registered_schedule_router = Router(name=__name__)
 
 
-@registered_schedule_router.callback_query(F.data == class_schedule_b.callback_data)
-async def handler_class_schedule_b(event: CallbackQuery):
-    await class_schedule_window().answer_window(event)
+class ScheduleSG(StatesGroup):
+    main = State()
+    week_schedule = State()
+    day_schedule = State()
 
 
-@registered_schedule_router.callback_query(F.data.startswith("class_schedule:day:"))
-async def handler_class_schedule_day(
-    event: CallbackQuery, dbrepositories: DBRepositories
-):
-    assert event.data is not None
-    cb_data = event.data.split(":")
-    assert len(cb_data) == 3
-    selected_day = cb_data[2]
+# --- Вспомогательные функции ---
 
-    now_day = datetime.now(TZ_MOSCOW).date()
+
+async def get_student_group_id(manager: DialogManager, repos: DBRepositories) -> int:
+    """Кэширует group_id в рамках диалога, исключая повторные запросы в БД."""
+
+    if "group_id" not in manager.dialog_data:
+        student = await repos.student.find_by_telegram_id(manager.event.from_user.id)
+        assert student is not None
+        manager.dialog_data["group_id"] = student.group_id
+    return manager.dialog_data["group_id"]
+
+
+def parse_target_date(selected_day: str) -> date:
+    today = datetime.now(TZ_MOSCOW).date()
     if selected_day == "today":
-        target_day = now_day
-    elif selected_day == "tomorrow":
-        target_day = now_day + timedelta(days=1)
+        return today
+    if selected_day == "tomorrow":
+        return today + timedelta(days=1)
+    return datetime.strptime(selected_day, DATE_FORMAT).date()
+
+
+def format_daily_schedule(daily_schedule: DailySchedule) -> str:
+    lines = [
+        f"{b(c.class_.number)}. {code(c.class_.start_at.strftime(TIME_FORMAT))} - "
+        f"{code(c.class_.end_at.strftime(TIME_FORMAT))} | {c.academic_subject.name} | "
+        f"{c.audience.name if c.audience else 'Ауд. не указана'} | "
+        f"{c.class_type_.name if c.class_type_ else 'Тип не указан'}"
+        for c in daily_schedule.classes
+    ]
+    weekday = RU_WEEKDAY_NAMES[daily_schedule.weekday_number]
+    date_str = daily_schedule.day_date.strftime(DATE_FORMAT)
+    return f"{b(f'📅 Расписание на {weekday} {date_str}')}\n\n" + "\n".join(lines)
+
+
+# --- Точка входа ---
+
+
+@registered_schedule_router.callback_query(F.data == class_schedule_b.callback_data)
+async def handler_class_schedule_b(event: CallbackQuery, dialog_manager: DialogManager) -> None:
+    await dialog_manager.start(ScheduleSG.main, mode=StartMode.RESET_STACK)
+
+
+# --- Обработчики действий ---
+
+
+async def on_back_from_day(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
+    # Если пришли из недели — возвращаем в неделю, иначе — в главное меню
+    if manager.dialog_data.get("day_opened_from") == "week":
+        await manager.switch_to(ScheduleSG.week_schedule)
     else:
-        target_day = datetime.strptime(selected_day, DATE_FORMAT).date()
+        await manager.switch_to(ScheduleSG.main)
 
-    student = await dbrepositories.student.find_by_telegram_id(event.from_user.id)
-    assert student is not None
 
-    # Проверка учебного дня
-    non_working_day = await is_non_working_day(
-        group_id=student.group_id, day=target_day, dbrepositories=dbrepositories
-    )
-    if non_working_day:
-        logger.info(
-            f"Не показываю расписание на {target_day} так как это нерабочий день."
-        )
-        await event.answer("🐱 Это неучебный день", show_alert=True)
+async def on_back_to_menu(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
+    state = manager.middleware_data["state"]
+    await command_start_handler_registered(callback, state, manager)
+
+
+async def on_week_schedule(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
+    manager.dialog_data["selected_week"] = button.widget_id
+    await manager.switch_to(ScheduleSG.week_schedule)
+
+
+async def on_day_schedule(
+    callback: CallbackQuery,
+    widget: Any,
+    manager: DialogManager,
+    item_id: str | None = None,
+) -> None:
+    """
+    Универсальный хэндлер: работает и для Button ('today'/'tomorrow'), и для Select (конкретная дата).
+    """
+
+    selected_day = item_id or widget.widget_id
+    repos: DBRepositories = manager.middleware_data["dbrepositories"]
+    group_id = await get_student_group_id(manager, repos)
+    target_day = parse_target_date(selected_day)
+
+    # Валидации с показом всплывающего алерта
+    if await is_non_working_day(group_id=group_id, day=target_day, dbrepositories=repos):
+        logger.info(f"Неучебный день: {target_day}")
+        await callback.answer("🐱 Это неучебный день", show_alert=True)
         return
 
-    # Получение расписания на день
-    daily_schedule = await get_daily_schedule(
-        student.group_id, target_day, dbrepositories
-    )
-
-    # Если расписание не установлено
-    if len(daily_schedule.classes) == 0:
-        logger.info(
-            f"Не показываю расписание на {target_day} так как оно не установлено."
-        )
-        await event.answer("🐱 На этот день не установлено расписание", show_alert=True)
+    daily_schedule = await get_daily_schedule(group_id, target_day, repos)
+    if not daily_schedule.classes:
+        logger.info(f"Пустое расписание на {target_day}")
+        await callback.answer("🐱 На этот день не установлено расписание", show_alert=True)
         return
 
-    current_week = target_day.isocalendar().week == now_day.isocalendar().week
-    next_week = (
-        target_day.isocalendar().week
-        == (now_day + timedelta(weeks=1)).isocalendar().week
+    manager.dialog_data["day_opened_from"] = (
+        "main" if manager.current_context().state == ScheduleSG.main else "week"
     )
 
-    back_btn = None
-    if current_week is True:
-        back_btn = class_schedule_current_week_b
-    elif next_week is True:
-        back_btn = class_schedule_next_week_b
-
-    # Создание окна с расписанием на день
-    daily_schedule_window = DailyScheduleWindow(
-        class_schedule=daily_schedule.classes,
-        day=daily_schedule.day_date,
-        weekday=daily_schedule.weekday_number,
-        back_btn=back_btn,
-    )
-
-    await daily_schedule_window.answer_window(event)
+    # Сохраняем уже готовый текст, чтобы геттер не лез повторно в БД
+    manager.dialog_data["day_schedule_text"] = format_daily_schedule(daily_schedule)
+    await manager.switch_to(ScheduleSG.day_schedule)
 
 
-@registered_schedule_router.callback_query(F.data.startswith("class_schedule:week:"))
-async def handler_class_schedule_week(
-    event: CallbackQuery, dbrepositories: DBRepositories
-):
-    selected_week = event.data.split(":")[2]  # pyright: ignore[reportOptionalMemberAccess]
+# --- Геттеры данных ---
 
-    now_day = datetime.now(TZ_MOSCOW).date()
+
+async def get_day_schedule_data(dialog_manager: DialogManager, **kwargs: dict) -> dict:
+    return {"schedule_text": dialog_manager.dialog_data["day_schedule_text"]}
+
+
+async def get_week_schedule_data(
+    dialog_manager: DialogManager,
+    dbrepositories: DBRepositories,
+    **kwargs: dict,
+) -> dict:
+    group_id = await get_student_group_id(dialog_manager, dbrepositories)
+    selected_week = dialog_manager.dialog_data.get("selected_week", "current_week")
+
+    now = datetime.now(TZ_MOSCOW).date()
+    helper_day = now if selected_week == "current_week" else now + timedelta(weeks=1)
+
+    weekly_schedule = await get_weekly_schedule(group_id, helper_day, dbrepositories)
+    week_stars = "*" if weekly_schedule.week_stars == 1 else "**"
+
     if selected_week == "current_week":
-        helper_day = now_day
-    elif selected_week == "next_week":
-        helper_day = now_day + timedelta(weeks=1)
+        text = (
+            f"{b(f'📆 Расписание на текущую неделю ({week_stars})')}\n\n{i('🟢 - Текущий день.')}"
+        )
     else:
-        return logger.warning(f"Неизвестный selected week: {selected_week}")
+        text = f"{b(f'📆 Расписание на следующую неделю ({week_stars})')}"
 
-    student = await dbrepositories.student.find_by_telegram_id(event.from_user.id)
+    week_days = [
+        {
+            "date": day.day_date.strftime(DATE_FORMAT),
+            "text": class_schedule_onday_b(
+                day.day_date,
+                current_day=day.is_current_day,
+                strikethrough=day.is_non_working_day,
+            ).text,
+        }
+        for day in weekly_schedule.week_days
+    ]
 
-    # Получение расписания на неделю
-    weekly_schedule = await get_weekly_schedule(
-        student.group_id,  # pyright: ignore[reportOptionalMemberAccess]
-        helper_day,
-        dbrepositories,
-    )
+    return {"schedule_text": text, "week_days": week_days}
 
-    # Создание окна с расписанием на неделю
-    if selected_week == "current_week":
-        weekly_schedule_window = CurrentWeeklyScheduleWindow(
-            week_days=weekly_schedule.week_days,
-            week_stars="*" if weekly_schedule.week_stars == 1 else "**",
-        )
-    elif selected_week == "next_week":
-        weekly_schedule_window = NextWeeklyScheduleWindow(
-            week_days=weekly_schedule.week_days,
-            week_stars="*" if weekly_schedule.week_stars == 1 else "**",
-        )
 
-    await weekly_schedule_window.answer_window(event)  # pyright: ignore[reportPossiblyUnboundVariable]
+# --- Диалог ---
+
+dialog = Dialog(
+    Window(
+        Const(b("🗓️ Расписание")),
+        Button(
+            Const("📅 Текущая неделя"),
+            id="current_week",
+            on_click=on_week_schedule,
+        ),
+        Button(
+            Const("📅 Следующая неделя"),
+            id="next_week",
+            on_click=on_week_schedule,
+        ),
+        Row(
+            Button(
+                Const("Сегодня"),
+                id="today",
+                style=Style(style=ButtonStyle.PRIMARY),
+                on_click=on_day_schedule,
+            ),
+            Button(
+                Const("Завтра"),
+                id="tomorrow",
+                style=Style(style=ButtonStyle.PRIMARY),
+                on_click=on_day_schedule,
+            ),
+        ),
+        Button(Const("◀️ Назад"), id="back_to_menu", on_click=on_back_to_menu),
+        state=ScheduleSG.main,
+    ),
+    Window(
+        Format("{schedule_text}"),
+        Column(
+            Select(
+                Format("{item[text]}"),
+                id="select_week_day",
+                item_id_getter=lambda item: item["date"],
+                items="week_days",
+                on_click=on_day_schedule,  # Тот же самый обработчик
+            )
+        ),
+        Back(Const("◀️ Назад")),
+        state=ScheduleSG.week_schedule,
+        getter=get_week_schedule_data,
+    ),
+    Window(
+        Format("{schedule_text}"),
+        Button(Const("◀️ Назад"), id="back_from_day", on_click=on_back_from_day),
+        state=ScheduleSG.day_schedule,
+        getter=get_day_schedule_data,
+    ),
+)
+
+registered_schedule_router.include_routers(dialog)

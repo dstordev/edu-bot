@@ -1,69 +1,14 @@
 from datetime import date
-from typing import Literal
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from db.models.tables import ReplacementSchedule, Schedule
-from db.services.schedule import DailySchedule
 from telegram_bot.buttons.other import back_b
-from telegram_bot.buttons.schedule import class_schedule_b, class_schedule_onday_b
-from telegram_bot.utils.html_format import b, code, i
+from telegram_bot.buttons.schedule import class_schedule_b
+from telegram_bot.utils.html_format import b, code
 from telegram_bot.windows.info_window import InfoWindow
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES, TIME_FORMAT
-
-
-class _WeeklyScheduleWindow(InfoWindow):
-    def __init__(
-        self, *, week_days: list[DailySchedule], week_stars: Literal["*", "**"]
-    ):
-        self.week_days = week_days
-        super().__init__(
-            text=(
-                f"{b(f'📆 Расписание на неделю ({week_stars})')}\n\n"
-                f"{i('🟢 - Текущий день.')}"
-            ),
-            inline_keyboard_markup=self.inline_keyboard(),
-        )
-
-    def inline_keyboard(self) -> InlineKeyboardMarkup:
-        builder = InlineKeyboardBuilder()
-        for week_day in self.week_days:
-            builder.add(
-                class_schedule_onday_b(
-                    week_day.day_date,
-                    current_day=week_day.is_current_day,
-                    strikethrough=week_day.is_non_working_day,
-                )
-            )
-        builder.add(back_b(class_schedule_b))
-        builder.adjust(1)
-        return builder.as_markup()
-
-
-class CurrentWeeklyScheduleWindow(_WeeklyScheduleWindow):
-    def __init__(
-        self,
-        *,
-        week_days: list[DailySchedule],
-        week_stars: Literal["*", "**"],
-    ):
-        super().__init__(week_days=week_days, week_stars=week_stars)
-        self.text = (
-            f"{b(f'📆 Расписание на текущую неделю ({week_stars})')}\n\n"
-            f"{i('🟢 - Текущий день.')}"
-        )
-
-
-class NextWeeklyScheduleWindow(_WeeklyScheduleWindow):
-    def __init__(
-        self,
-        *,
-        week_days: list[DailySchedule],
-        week_stars: Literal["*", "**"],
-    ):
-        super().__init__(week_days=week_days, week_stars=week_stars)
-        self.text = f"{b(f'📆 Расписание на следующую неделю ({week_stars})')}"
 
 
 class DailyScheduleWindow(InfoWindow):

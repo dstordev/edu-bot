@@ -15,6 +15,7 @@ from redis.asyncio import Redis
 
 from checks import check_postgres_connection, check_redis_connection
 from db.connect import async_sessmaker
+from metadata import VERSION
 from services.auto_update_replacement_schedule.service import check_schedule_updates
 from services.schedule_notifier import ScheduleNotifier
 from settings import settings
@@ -26,9 +27,8 @@ from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
 from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
 from telegram_bot.utils.html_format import code
+from utils.notify.admins import notify_admins
 from utils.timezones import TZ_MOSCOW_RAW
-
-VERSION = "0.8.1"
 
 logger.remove()
 logger.add(sys.stderr, level="DEBUG")
@@ -63,8 +63,7 @@ async def on_startup(bot: Bot, redis: Redis) -> None:
     logger.debug("APScheduler запущен.")
 
     logger.debug("Уведомляем админов о запуске...")
-    for admin_id in settings.ADMIN_IDS:
-        await bot.send_message(admin_id, f"😸 Бот запущен на версии {code(VERSION)}!")
+    await notify_admins(f"😸 Бот запущен на версии {code(VERSION)}!", bot)
 
 
 async def on_shutdown() -> None:
@@ -79,9 +78,7 @@ async def main() -> None:
         return logger.warning("Не удалось подключится к postgres.")
 
     logger.debug("Проверяю подключение к REDIS...")
-    if not await check_redis_connection(
-        host=settings.REDIS_HOST, port=settings.REDIS_PORT
-    ):
+    if not await check_redis_connection(host=settings.REDIS_HOST, port=settings.REDIS_PORT):
         return logger.warning("Не удалось подключится к redis.")
 
     redis_client = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
@@ -93,9 +90,7 @@ async def main() -> None:
     )
 
     dp = Dispatcher(
-        storage=RedisStorage(
-            redis_client, key_builder=DefaultKeyBuilder(with_destiny=True)
-        )
+        storage=RedisStorage(redis_client, key_builder=DefaultKeyBuilder(with_destiny=True))
     )
     dp.update.outer_middleware(DbSessionMiddleware(session_pool=async_sessmaker))
 

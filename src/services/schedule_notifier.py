@@ -14,7 +14,7 @@ from telegram_bot.windows.registered import (
     notification_end_at_window,
     notification_start_at_window,
 )
-from utils.notify_students import notify_students_by_group_repos
+from utils.notify.students import notify_students_by_group_repos
 from utils.schedule import get_week_stars
 from utils.timezones import TZ_MOSCOW
 
