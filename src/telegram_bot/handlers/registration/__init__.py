@@ -9,10 +9,10 @@ from telegram_bot.utils.html_format import b
 from .dialog import dialog_router
 from .states import RegistrationSG
 
-unregistered_router = Router(name=__name__)
+registration_router = Router(name=__name__)
 
 
-@unregistered_router.message(CommandStart())
+@registration_router.message(CommandStart())
 async def command_start(
     message: Message, dialog_manager: DialogManager, dbrepositories: DBRepositories
 ) -> None:
@@ -23,6 +23,6 @@ async def command_start(
     await dialog_manager.start(RegistrationSG.group_token, mode=StartMode.RESET_STACK)
 
 
-unregistered_router.include_router(dialog_router)
+registration_router.include_router(dialog_router)
 
-__all__ = ["unregistered_router"]
+__all__ = ["registration_router"]

@@ -4,7 +4,7 @@ from .admin import admin_router
 from .commands import commands_router
 from .error import error_router
 from .registered import registered_router
-from .registration import unregistered_router
+from .registration import registration_router
 
 global_router = Router()
 
@@ -12,7 +12,7 @@ global_router.include_routers(
     commands_router,
     admin_router,
     registered_router,
-    unregistered_router,
+    registration_router,
     error_router,
 )
 
