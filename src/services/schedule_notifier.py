@@ -9,16 +9,52 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from db.models.tables import ReplacementSchedule, Schedule
 from db.repositories import DBRepositories
 from db.services.working_days import is_non_working_day_and_no_schedule
-from telegram_bot.windows.registered import (
-    InfoWindow,
-    notification_end_at_window,
-    notification_start_at_window,
-)
+from telegram_bot.utils.html_format import b, code
+from utils.datetime_format import TIME_FORMAT
 from utils.notify.students import notify_students_by_group_repos
 from utils.schedule import get_week_stars
 from utils.timezones import TZ_MOSCOW
 
 ScheduleItem = ReplacementSchedule | Schedule
+
+
+def process_text_notification_start_at(
+    lesson_num: int,
+    academic_subject_name: str,
+    lesson_start_at: time,
+    audience_name: str | None = None,
+) -> str:
+    lesson_start_at_format = format(lesson_start_at, TIME_FORMAT)
+    return b(
+        "⏰ Через 5 минут начало занятия\n\n"
+        f"👩‍🎓 №{lesson_num} {academic_subject_name} — с {code(lesson_start_at_format)} "
+        f"({audience_name or 'Ауд. не указана'})"
+    )
+
+
+def process_text_notification_end_at(
+    lesson_num: int,
+    academic_subject_name: str,
+    lesson_end_at: time,
+    audience_name: str | None = None,
+    next_schedule: ReplacementSchedule | Schedule | None = None,
+) -> str:
+    lesson_end_at_format = format(lesson_end_at, TIME_FORMAT)
+    text = b(
+        "⏰ Через 5 минут конец занятия\n\n"
+        f"👩‍🎓 №{lesson_num} {academic_subject_name} — до {code(lesson_end_at_format)} "
+        f"({audience_name or 'Ауд. не указана'})"
+    )
+    if next_schedule:
+        next_schedule_lesson_start_at_format = format(next_schedule.class_.start_at, TIME_FORMAT)
+        text += (
+            f"\n\n➡️ Следующая:\n"
+            f"📚 №{next_schedule.class_.number} {next_schedule.academic_subject.name} — с "
+            f"{next_schedule_lesson_start_at_format} "
+            f"({next_schedule.audience.name if next_schedule.audience else 'Ауд. не указана'})"
+        )
+
+    return text
 
 
 class ScheduleNotifier:
@@ -74,13 +110,13 @@ class ScheduleNotifier:
             if not schedules:
                 return
 
-            for group_id, window in self.prepare_student_data_notification(
+            for group_id, notification_text in self.prepare_student_data_notification(
                 schedules, repos, target_time
             ):
                 logger.debug(f"Запускаю уведомление группы {group_id} о расписании...")
                 total, failed = await notify_students_by_group_repos(
                     group_id,
-                    window.text,
+                    notification_text,
                     repos,
                     self.__bot,
                     filter_enabled_reminder_5min=True,
@@ -149,22 +185,22 @@ class ScheduleNotifier:
         targets: list[tuple[ScheduleItem, ScheduleItem | None]],
         repos: DBRepositories,
         target_time: time,
-    ) -> Generator[tuple[int, InfoWindow]]:
-        """Формирует список сообщений (окон) для рассылки студентам."""
+    ) -> Generator[tuple[int, str]]:
+        """Формирует список сообщений для рассылки студентам."""
 
         for schedule, next_schedule in targets:
             cls = schedule.class_
             is_start = cls.start_at == target_time
 
-            window = (
-                notification_start_at_window(
+            notification_text = (
+                process_text_notification_start_at(
                     cls.number,
                     schedule.academic_subject.name,
                     cls.start_at,
                     schedule.audience.name if schedule.audience else None,
                 )
                 if is_start
-                else notification_end_at_window(
+                else process_text_notification_end_at(
                     cls.number,
                     schedule.academic_subject.name,
                     cls.end_at,
@@ -172,4 +208,4 @@ class ScheduleNotifier:
                     next_schedule,
                 )
             )
-            yield schedule.group_id, window
+            yield schedule.group_id, notification_text
