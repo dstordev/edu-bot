@@ -7,7 +7,7 @@ from db.models.tables import Audience
 
 
 class AudienceRepository:
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     async def get_by_id(self, _id: int) -> Audience | None:

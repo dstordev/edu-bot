@@ -11,7 +11,7 @@ class AcademicSubjectRepository:
     Репозиторий для работы с таблицой предметов в базе данных.
     """
 
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     async def get_by_id(self, academic_subject_id: int) -> AcademicSubject | None:

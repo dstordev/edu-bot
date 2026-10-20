@@ -9,7 +9,7 @@ class GroupRepository:
     Репозиторий для работы с таблицой учебных групп в базе данных.
     """
 
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     async def get_groups(self) -> list[Group]:
@@ -28,5 +28,5 @@ class GroupRepository:
         )
         return result.scalar()
 
-    async def create(self):
+    async def create(self) -> None:
         pass

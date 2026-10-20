@@ -64,4 +64,3 @@ async def on_unknown_state(event: ErrorEvent, dialog_manager: DialogManager) -> 
 
 
 error_router.errors.register(on_unknown_state, ExceptionTypeFilter(UnknownState))
-error_router.errors.register(on_unknown_state, ExceptionTypeFilter(UnknownIntent))

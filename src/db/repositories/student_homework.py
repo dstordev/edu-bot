@@ -5,7 +5,7 @@ from db.models.tables import StudentHomework
 
 
 class StudentHomeworkRepository:
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     async def mark_completed(self, *, student_id: int, homework_id: int) -> int:

@@ -9,7 +9,7 @@ from db.models.tables import Class, Schedule
 
 
 class ScheduleRepository:
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     async def get_lessons_by_boundary_time(

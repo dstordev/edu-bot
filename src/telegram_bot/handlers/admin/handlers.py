@@ -11,7 +11,7 @@ from utils.datetime_format import DATE_FORMAT
 
 async def on_academic_subject_selected(
     callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
-):
+) -> None:
     """Обработчик выбора учебного предмета."""
 
     manager.dialog_data["academic_subject"] = item_id
@@ -20,7 +20,7 @@ async def on_academic_subject_selected(
 
 async def on_group_selected(
     callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
-):
+) -> None:
     """Обработчик выбора группы."""
 
     manager.dialog_data["group"] = item_id

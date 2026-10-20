@@ -1,12 +1,11 @@
 from aiogram import Bot
-from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, StartMode
 from aiogram_dialog.widgets.input import ManagedTextInput
 from loguru import logger
 
 from db.repositories import DBRepositories
-from telegram_bot.handlers.registered.general import command_start_handler_registered
+from telegram_bot.handlers.registered.main_menu import MainMenuSG
 from telegram_bot.utils.html_format import b
 from utils.notify.admins import notify_admins
 
@@ -16,7 +15,7 @@ async def on_group_token(
     widget: ManagedTextInput[str],
     manager: DialogManager,
     data: str,
-):
+) -> None:
     repos: DBRepositories = manager.middleware_data["dbrepositories"]
     if not (group := await repos.group.find_by_token(data)):
         manager.dialog_data["token_not_found"] = True
@@ -31,14 +30,13 @@ async def on_student_name(
     widget: ManagedTextInput[str],
     manager: DialogManager,
     data: str,
-):
+) -> None:
     if not message.from_user:
         logger.warning("Полученное сообщение ожидается от пользователя.")
         return
 
     repos: DBRepositories = manager.middleware_data["dbrepositories"]
     bot: Bot = manager.middleware_data["bot"]
-    state: FSMContext = manager.middleware_data["state"]
     group_id: int = manager.dialog_data["group_id"]
     student_name = data
 
@@ -73,5 +71,4 @@ async def on_student_name(
     await notify_admins(b("😸 Зарегистрирован новый пользователь!"), bot)
 
     # Редирект в главное меню
-    await manager.done()
-    await command_start_handler_registered(message, state, manager)
+    await manager.start(MainMenuSG.main, mode=StartMode.RESET_STACK)

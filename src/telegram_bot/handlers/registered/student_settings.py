@@ -2,13 +2,12 @@ from aiogram import F, Router
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, User
 from aiogram_dialog import Dialog, DialogManager, StartMode, Window
-from aiogram_dialog.widgets.kbd import Button, Checkbox, ManagedCheckbox
+from aiogram_dialog.widgets.kbd import Cancel, Checkbox, ManagedCheckbox
 from aiogram_dialog.widgets.text import Const
 from loguru import logger
 
 from db.repositories import DBRepositories
 from telegram_bot.buttons.other import student_settings_b
-from telegram_bot.handlers.registered.general import command_start_handler_registered
 from telegram_bot.utils.html_format import b, i
 
 
@@ -69,15 +68,6 @@ async def on_reminder_5min_toggled(
     await callback.answer(msg)
 
 
-async def on_back_to_menu(
-    callback: CallbackQuery,
-    button: Button,
-    manager: DialogManager,
-) -> None:
-    state = manager.middleware_data["state"]
-    await command_start_handler_registered(callback, state, manager)
-
-
 student_settings_dialog = Dialog(
     Window(
         Const(f"{b('⚙️ Настройки')}\n{i('Тут ты можешь настроить что-то под себя.')}"),
@@ -87,11 +77,7 @@ student_settings_dialog = Dialog(
             id="reminder_5min_checkbox",
             on_click=on_reminder_5min_toggled,
         ),
-        Button(
-            Const("◀️ Назад"),
-            id="back_to_menu",
-            on_click=on_back_to_menu,
-        ),
+        Cancel(Const("◀️ Назад")),
         state=StudentSettingsSG.main,
     ),
     on_start=on_dialog_start,

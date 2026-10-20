@@ -61,7 +61,7 @@ async def get_audiences(dbrepositories: DBRepositories, **kwargs):
 # === Обработчики ===
 async def on_class_selected(
     callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
-):
+) -> None:
     """Обработчик выбора пары."""
 
     manager.dialog_data["class_"] = item_id
@@ -70,7 +70,7 @@ async def on_class_selected(
 
 async def on_class_type_selected(
     callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
-):
+) -> None:
     """Обработчик выбора типа пары."""
 
     manager.dialog_data["class_type"] = item_id
@@ -79,7 +79,7 @@ async def on_class_type_selected(
 
 async def on_audience_selected(
     callback: CallbackQuery, widget: Select, manager: DialogManager, item_id: str
-):
+) -> None:
     """Обработчик выбора аудитории."""
 
     dbrepositories: DBRepositories = manager.middleware_data["dbrepositories"]

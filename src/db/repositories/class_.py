@@ -8,7 +8,7 @@ from db.models.tables import Class
 
 
 class ClassRepository:
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     # Получение занятий
