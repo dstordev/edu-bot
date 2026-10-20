@@ -3,13 +3,11 @@ from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.text import Const
 from aiogram_dialog.widgets.text.multi import Case
 
-from telegram_bot.handlers.unregistered.getters import (
-    getter_group_token,
-    getter_student_name,
-)
-from telegram_bot.handlers.unregistered.handlers import on_group_token, on_student_name
-from telegram_bot.handlers.unregistered.states import UnregisteredSG
 from telegram_bot.utils.html_format import b
+
+from .getters import getter_group_token, getter_student_name
+from .handlers import on_group_token, on_student_name
+from .states import UnregisteredSG
 
 dialog_router = Dialog(
     Window(

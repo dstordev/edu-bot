@@ -4,9 +4,10 @@ from aiogram.types import Message
 from aiogram_dialog import DialogManager, StartMode
 
 from db.repositories import DBRepositories
-from telegram_bot.handlers.unregistered.dialog import dialog_router
-from telegram_bot.handlers.unregistered.states import UnregisteredSG
 from telegram_bot.utils.html_format import b
+
+from .dialog import dialog_router
+from .states import UnregisteredSG
 
 unregistered_router = Router(name=__name__)
 

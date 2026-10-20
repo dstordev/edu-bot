@@ -4,7 +4,7 @@ from .admin import admin_router
 from .commands import commands_router
 from .error import error_router
 from .registered import registered_router
-from .unregistered import unregistered_router
+from .registration import unregistered_router
 
 global_router = Router()
 
