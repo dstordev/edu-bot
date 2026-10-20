@@ -17,15 +17,11 @@ class GroupRepository:
         return list(result.scalars().all())
 
     async def find_by_name(self, name: str) -> Group | None:
-        result = await self.async_session.execute(
-            select(Group).where(Group.name == name)
-        )
+        result = await self.async_session.execute(select(Group).where(Group.name == name))
         return result.scalar()
 
     async def find_by_token(self, token: str) -> Group | None:
-        result = await self.async_session.execute(
-            select(Group).where(Group.token == token)
-        )
+        result = await self.async_session.execute(select(Group).where(Group.token == token))
         return result.scalar()
 
     async def create(self) -> None:

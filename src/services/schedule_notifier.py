@@ -54,9 +54,7 @@ class ScheduleNotifier:
         async with self.__async_sessionmaker() as session:
             repos = DBRepositories(session)
 
-            if await is_non_working_day_and_no_schedule(
-                day=target_date, dbrepositories=repos
-            ):
+            if await is_non_working_day_and_no_schedule(day=target_date, dbrepositories=repos):
                 return
 
             replacement_groups = await self.find_group_ids_in_replacement_schedules(
@@ -65,16 +63,12 @@ class ScheduleNotifier:
 
             schedules: list[tuple[ScheduleItem, ScheduleItem | None]] = []
             schedules.extend(
-                await self.find_schedules(
-                    target_date, target_time, replacement_groups, repos
-                )
+                await self.find_schedules(target_date, target_time, replacement_groups, repos)
             )
 
             if replacement_groups:
                 schedules.extend(
-                    await self.find_replacement_schedules(
-                        target_date, target_time, repos
-                    )
+                    await self.find_replacement_schedules(target_date, target_time, repos)
                 )
 
             if not schedules:
@@ -137,9 +131,7 @@ class ScheduleNotifier:
         """Ищет пары по заменам, граничащие с указанным временем."""
 
         result: list[tuple[ReplacementSchedule, ReplacementSchedule | None]] = []
-        lessons = await repos.replacement_schedule.get_lessons_by_boundary_time(
-            day, time_
-        )
+        lessons = await repos.replacement_schedule.get_lessons_by_boundary_time(day, time_)
 
         for item in lessons:
             next_lesson = None

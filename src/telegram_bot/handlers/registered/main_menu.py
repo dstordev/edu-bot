@@ -1,3 +1,5 @@
+from typing import Any
+
 from aiogram.enums import ButtonStyle
 from aiogram.fsm.state import State, StatesGroup
 from aiogram_dialog import Dialog, DialogManager, Window
@@ -18,7 +20,7 @@ class MainMenuSG(StatesGroup):
     main = State()
 
 
-async def get_main_menu_data(dialog_manager: DialogManager, **kwargs: dict) -> dict:
+async def get_main_menu_data(dialog_manager: DialogManager, **kwargs: Any) -> dict[str, Any]:
     user = dialog_manager.event.from_user
     is_admin = user.id in settings.ADMIN_IDS if user else False
     return {"is_admin": is_admin}

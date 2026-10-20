@@ -1,7 +1,9 @@
+from typing import Any
+
 from db.repositories import DBRepositories
 
 
-async def get_groups(dbrepositories: DBRepositories, **kwargs):
+async def get_groups(dbrepositories: DBRepositories, **kwargs: Any) -> dict[str, Any]:
     """Геттер для получения групп."""
 
     groups = await dbrepositories.group.get_groups()
@@ -10,7 +12,7 @@ async def get_groups(dbrepositories: DBRepositories, **kwargs):
     }
 
 
-async def get_academic_subjects(dbrepositories: DBRepositories, **kwargs):
+async def get_academic_subjects(dbrepositories: DBRepositories, **kwargs: Any) -> dict[str, Any]:
     """Геттер для получения учебных предметов."""
 
     academic_subjects = await dbrepositories.academic_subject.get_all(limit=40)

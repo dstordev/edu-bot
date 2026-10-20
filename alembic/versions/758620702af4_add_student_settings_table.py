@@ -32,9 +32,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("student_id"),
     )
 
-    op.execute(
-        sa.text("INSERT INTO student_settings (student_id) SELECT id FROM student;")
-    )
+    op.execute(sa.text("INSERT INTO student_settings (student_id) SELECT id FROM student;"))
     # ### end Alembic commands ###
 
 

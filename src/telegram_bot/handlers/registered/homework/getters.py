@@ -1,3 +1,5 @@
+from typing import Any
+
 from aiogram.enums import ContentType
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
@@ -10,8 +12,8 @@ from .help import format_homework_detail, get_student_info
 
 
 async def get_homework_list_data(
-    dialog_manager: DialogManager, dbrepositories: DBRepositories, **kwargs: dict
-) -> dict:
+    dialog_manager: DialogManager, dbrepositories: DBRepositories, **kwargs: Any
+) -> dict[str, Any]:
     student_id, group_id = await get_student_info(dialog_manager, dbrepositories)
     hw_type = dialog_manager.dialog_data.get("hw_type", "unfinished")
     page_index = dialog_manager.dialog_data.get("page", 0)
@@ -46,8 +48,8 @@ async def get_homework_list_data(
 
 
 async def get_homework_detail_data(
-    dialog_manager: DialogManager, dbrepositories: DBRepositories, **kwargs
-) -> dict:
+    dialog_manager: DialogManager, dbrepositories: DBRepositories, **kwargs: Any
+) -> dict[str, Any]:
     student_id, _ = await get_student_info(dialog_manager, dbrepositories)
     hw_id = dialog_manager.dialog_data["current_hw_id"]
 

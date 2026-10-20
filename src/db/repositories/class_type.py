@@ -17,7 +17,5 @@ class ClassTypeRepository:
     async def find_by_name(self, name: str) -> ClassType | None:
         """Ищет и возвращает тип пары по его имени."""
 
-        r = await self.async_session.execute(
-            select(ClassType).where(ClassType.name == name)
-        )
+        r = await self.async_session.execute(select(ClassType).where(ClassType.name == name))
         return r.scalar_one_or_none()

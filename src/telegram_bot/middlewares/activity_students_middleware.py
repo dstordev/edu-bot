@@ -23,16 +23,13 @@ class ActivityStudentsMiddleware(BaseMiddleware):
                 if found_student:
                     if not found_student.is_active:
                         try:
-                            await repos.student.mark_activity(
-                                found_student.id, is_active=True
-                            )
+                            await repos.student.mark_activity(found_student.id, is_active=True)
                         except Exception as ex:
-                            logger.error(
-                                f"Не удалось пометить активность студента: {ex}"
-                            )
+                            logger.error(f"Не удалось пометить активность студента: {ex}")
                 else:
                     logger.warning(
-                        f"Не удалось найти пользователя {from_user.username or from_user.id} в студентах."
+                        f"Не удалось найти пользователя {from_user.username or from_user.id} "
+                        "в студентах."
                     )
             else:
                 if not from_user:
@@ -41,11 +38,13 @@ class ActivityStudentsMiddleware(BaseMiddleware):
                     )
                 else:
                     logger.warning(
-                        "[ActivityStudentsMiddleware] Не удалось найти dbrepositories из data. Возможно мидлварь стоит выше чем нужно."
+                        "[ActivityStudentsMiddleware] Не удалось найти dbrepositories из data. "
+                        "Возможно мидлварь стоит выше чем нужно."
                     )
         else:
             logger.warning(
-                f"[ActivityStudentsMiddleware] Неизвестный тип события - пропускаем обработку. Событие: {event}"
+                "[ActivityStudentsMiddleware] Неизвестный тип события - пропускаем обработку. "
+                f"Событие: {event}"
             )
 
         return await handler(event, data)

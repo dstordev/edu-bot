@@ -120,10 +120,7 @@ class ReplacementScheduleRepository:
                 joinedload(ReplacementSchedule.class_type_),
             )
             .join(Class, ReplacementSchedule.class_id == Class.id)
-            .where(
-                (ReplacementSchedule.group_id == group_id)
-                & (ReplacementSchedule.date == date_)
-            )
+            .where((ReplacementSchedule.group_id == group_id) & (ReplacementSchedule.date == date_))
             .order_by(Class.number)
         )
         return result.scalars().all()
@@ -133,8 +130,7 @@ class ReplacementScheduleRepository:
 
         r = await self.async_session.execute(
             delete(ReplacementSchedule).where(
-                (ReplacementSchedule.group_id == group_id)
-                & (ReplacementSchedule.date == date_)
+                (ReplacementSchedule.group_id == group_id) & (ReplacementSchedule.date == date_)
             )
         )
         r = cast(CursorResult, r)

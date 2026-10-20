@@ -35,9 +35,7 @@ async def get_daily_schedule(
 ) -> DailySchedule:
     now_day = datetime.now(TZ_MOSCOW).date()
 
-    schedule = await dbrepositories.replacement_schedule.get_group_lessons_by_day(
-        group_id, day
-    )
+    schedule = await dbrepositories.replacement_schedule.get_group_lessons_by_day(group_id, day)
     if len(schedule) == 0:
         schedule = await dbrepositories.schedule.get_group_lessons_by_day(
             group_id,

@@ -22,6 +22,7 @@ async def command_start(
         return
 
     # Проверяем, есть ли студент в базе
+    # TODO: дублирование логики с фильтром
     student = await dbrepositories.student.find_by_telegram_id(message.from_user.id)
 
     if not student:

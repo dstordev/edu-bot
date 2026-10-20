@@ -19,9 +19,7 @@ class ClassRepository:
     # Возвращает пары, у которых время начала или время конца совпадает с переданным временем
     async def get_classes_by_time(self, iso_time: time) -> Sequence[Class]:
         result = await self.async_session.execute(
-            select(Class).where(
-                (Class.start_at == iso_time) | (Class.end_at == iso_time)
-            )
+            select(Class).where((Class.start_at == iso_time) | (Class.end_at == iso_time))
         )
         return result.scalars().all()
 

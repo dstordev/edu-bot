@@ -6,9 +6,7 @@ from db.repositories import DBRepositories
 
 
 class IsAdminFilter(BaseFilter):
-    async def __call__(
-        self, event: Message | CallbackQuery, ADMIN_IDS: list[int]
-    ) -> bool:
+    async def __call__(self, event: Message | CallbackQuery, ADMIN_IDS: list[int]) -> bool:
         if not event.from_user:
             logger.warning("У события отсутствует пользователь.")
             return False

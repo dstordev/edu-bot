@@ -20,9 +20,7 @@ class AcademicSubjectRepository:
         )
         return result.scalar()
 
-    async def get_all(
-        self, *, limit: int = 10, page_index: int = 0
-    ) -> Sequence[AcademicSubject]:
+    async def get_all(self, *, limit: int = 10, page_index: int = 0) -> Sequence[AcademicSubject]:
         result = await self.async_session.execute(
             select(AcademicSubject)
             .order_by(AcademicSubject.name.asc())

@@ -70,9 +70,7 @@ async def on_confirm(callback: CallbackQuery, button: Button, manager: DialogMan
             file_data["file_id"] for file_data in files if file_data["type"] == "photo"
         ]
         document_file_ids = [
-            file_data["file_id"]
-            for file_data in files
-            if file_data["type"] == "document"
+            file_data["file_id"] for file_data in files if file_data["type"] == "document"
         ]
     assignment_date: str | None = manager.dialog_data.get("date")
     group_id: int = int(manager.dialog_data["group"])
@@ -128,11 +126,7 @@ add_homework_dialog = Dialog(
         state=AddHomeworkSG.text,
     ),
     Window(
-        Const(
-            b(
-                "✏️ Отправьте фотографию или документ, чтобы прикрепить их к домашнему заданию"
-            )
-        ),
+        Const(b("✏️ Отправьте фотографию или документ, чтобы прикрепить их к домашнему заданию")),
         MessageInput(on_files, content_types=[ContentType.PHOTO, ContentType.DOCUMENT]),
         next_button,
         back_button,

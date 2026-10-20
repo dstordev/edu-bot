@@ -117,14 +117,10 @@ class InfoWindow:
     async def _handle_media_in_callback(self, message: Message) -> Message:
         """Обработка медиа в callback query"""
         # Если стратегия - редактировать и есть медиа в сообщении
-        if self.media_strategy == MediaStrategy.EDIT and self._message_has_media(
-            message
-        ):
+        if self.media_strategy == MediaStrategy.EDIT and self._message_has_media(message):
             try:
                 # Обновляем медиа
-                await message.edit_media(
-                    media=self.media, reply_markup=self.inline_keyboard_markup
-                )
+                await message.edit_media(media=self.media, reply_markup=self.inline_keyboard_markup)
                 # Обновляем caption
                 return await message.edit_caption(
                     caption=self.text,

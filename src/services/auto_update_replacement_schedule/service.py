@@ -44,9 +44,7 @@ async def save_replacements_for_group(
             added_count += 1
             continue
 
-        class_ = await dbrepositories.class_.find_class_by_time(
-            dto.class_start, dto.class_end
-        )
+        class_ = await dbrepositories.class_.find_class_by_time(dto.class_start, dto.class_end)
         if not class_:
             continue
 
@@ -56,9 +54,7 @@ async def save_replacements_for_group(
 
         class_type_id: int | None = None
         if dto.class_type_name is not None and (
-            class_type := await dbrepositories.class_type.find_by_name(
-                dto.class_type_name
-            )
+            class_type := await dbrepositories.class_type.find_by_name(dto.class_type_name)
         ):
             class_type_id = class_type.id
 
@@ -130,11 +126,7 @@ async def get_files(
                 files = []
                 messages = chats[0].get("Messages", [])
                 for msg in messages:
-                    plain = (
-                        msg.get("ServerMessage", {})
-                        .get("ClientMessage", {})
-                        .get("Plain")
-                    )
+                    plain = msg.get("ServerMessage", {}).get("ClientMessage", {}).get("Plain")
                     if not plain:
                         continue
 
@@ -167,14 +159,14 @@ async def download_file(file_path: str, session_id: str) -> bytes:
 
     timeout = aiohttp.ClientTimeout(total=60)
     async with (
-        aiohttp.ClientSession(
-            cookies={"Session_id": session_id}, timeout=timeout
-        ) as session,
+        aiohttp.ClientSession(cookies={"Session_id": session_id}, timeout=timeout) as session,
         session.get(
             url,
             params={"attach": "true"},
             headers={
-                "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:156.0) Gecko/20100101 Firefox/156.0",
+                "User-Agent": (
+                    "Mozilla/5.0 (X11; Linux x86_64; rv:156.0) Gecko/20100101 Firefox/156.0"
+                ),
                 "Accept": "*/*",
             },
         ) as response,
@@ -227,14 +219,14 @@ async def check_schedule_updates(
         except aiohttp.ClientResponseError as e:
             if e.status == 404:
                 logger.error(
-                    f"[Worker] Ошибка при скачивании {filename}, возможно файл удален, выставляем как битый на 5 дней: {e}"
+                    f"[Worker] Ошибка при скачивании {filename}, возможно файл удален, "
+                    f"выставляем как битый на 5 дней: {e}"
                 )
-                # Если файл не найден и возможно удален, то помечаем файл в Redis как битый (TTL 5 дней)
+                # Если файл не найден и возможно удален, то помечаем файл в Redis как битый
+                # (TTL 5 дней)
                 await redis.set(cache_key, "invalid", ex=432000)
                 continue
-            logger.error(
-                f"[Worker] Ошибка при скачивании {filename} (ClientResponseError): {e}"
-            )
+            logger.error(f"[Worker] Ошибка при скачивании {filename} (ClientResponseError): {e}")
             continue
         except Exception as e:
             logger.error(f"[Worker] Ошибка при скачивании {filename}: {e}")
@@ -259,9 +251,7 @@ async def check_schedule_updates(
 
                 # Если на этот день у группы уже были записаны замены — очищаем их перед обновлением
                 # (так как файл мог быть перезалит деканатом с исправлениями)
-                await repos.replacement_schedule.delete_by_group_and_date(
-                    group.id, schedule_date
-                )
+                await repos.replacement_schedule.delete_by_group_and_date(group.id, schedule_date)
                 await repos.non_working_day.delete(schedule_date, group.id)
 
                 added_count, proc_schedules = await save_replacements_for_group(
@@ -280,9 +270,7 @@ async def check_schedule_updates(
                 )
 
                 # Рассылка сообщений студентам
-                logger.debug(
-                    "[Worker] Начинаю уведомление студентов о новом расписании..."
-                )
+                logger.debug("[Worker] Начинаю уведомление студентов о новом расписании...")
                 # подготовка данных для красивой даты
                 d = {0: "сегодня", -1: "завтра", -2: "послезавтра"}
                 now_d = datetime.now(TZ_MOSCOW).date()
@@ -306,7 +294,21 @@ async def check_schedule_updates(
                     group.id,
                     (
                         f"{b('😺 Обновлено расписание')}\n"
-                        f"{b(f'{blockquote(f"Дата: {schedule_date_beuatufy} {i(f'({(str(d_name) + ", ") if d_name else ""}{weekday_name})')}")}\n\n')}"
+                        f"{
+                            b(
+                                f'{
+                                    blockquote(
+                                        f"Дата: {schedule_date_beuatufy} "
+                                        f"{
+                                            i(
+                                                f'({(str(d_name) + ", ") if d_name else ""}'
+                                                f'{weekday_name})'
+                                            )
+                                        }"
+                                    )
+                                }\n\n'
+                            )
+                        }"
                         f"{daily_schedule_text}"
                     ),
                     async_sessmaker,
@@ -314,7 +316,8 @@ async def check_schedule_updates(
                     filter_enabled_reminder_5min=False,
                 )
                 logger.debug(
-                    f"[Worker] Уведомление студентов закончено. Успешно отправлено: {total - failed}/{total}"
+                    "[Worker] Уведомление студентов закончено. "
+                    f"Успешно отправлено: {total - failed}/{total}"
                 )
             else:
                 logger.info(

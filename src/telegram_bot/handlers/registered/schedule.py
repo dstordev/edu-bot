@@ -85,7 +85,8 @@ async def on_day_schedule(
     item_id: str | None = None,
 ) -> None:
     """
-    Универсальный хэндлер: работает и для Button ('today'/'tomorrow'), и для Select (конкретная дата).
+    Универсальный хэндлер: работает и для Button ('today'/'tomorrow'),
+    и для Select (конкретная дата).
     """
 
     selected_day = item_id or widget.widget_id
@@ -117,15 +118,15 @@ async def on_day_schedule(
 # --- Геттеры данных ---
 
 
-async def get_day_schedule_data(dialog_manager: DialogManager, **kwargs: dict) -> dict:
+async def get_day_schedule_data(dialog_manager: DialogManager, **kwargs: Any) -> dict[str, Any]:
     return {"schedule_text": dialog_manager.dialog_data["day_schedule_text"]}
 
 
 async def get_week_schedule_data(
     dialog_manager: DialogManager,
     dbrepositories: DBRepositories,
-    **kwargs: dict,
-) -> dict:
+    **kwargs: Any,
+) -> dict[str, Any]:
     group_id = await get_student_group_id(dialog_manager, dbrepositories)
     selected_week = dialog_manager.dialog_data.get("selected_week", "current_week")
 
