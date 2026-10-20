@@ -20,9 +20,7 @@ from services.auto_update_replacement_schedule.service import check_schedule_upd
 from services.schedule_notifier import ScheduleNotifier
 from settings import settings
 from telegram_bot.handlers import global_router
-from telegram_bot.middlewares.activity_students_middleware import (
-    ActivityStudentsMiddleware,
-)
+from telegram_bot.middlewares.activity_students_middleware import ActivityStudentsMiddleware
 from telegram_bot.middlewares.db_session_middleware import DbSessionMiddleware
 from telegram_bot.middlewares.log_middleware import LoggerMiddleware
 from telegram_bot.middlewares.throttling_middleware import ThrottlingMiddleware
