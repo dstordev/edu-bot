@@ -1,7 +1,6 @@
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from aiogram import Router
 from aiogram.enums import ButtonStyle
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
@@ -20,8 +19,6 @@ from telegram_bot.buttons.schedule import (
 from telegram_bot.utils.html_format import b, code, i
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES, TIME_FORMAT
 from utils.timezones import TZ_MOSCOW
-
-registered_schedule_router = Router(name=__name__)
 
 
 class ScheduleSG(StatesGroup):
@@ -162,7 +159,7 @@ async def get_week_schedule_data(
 
 # --- Диалог ---
 
-dialog = Dialog(
+schedule_dialog = Dialog(
     Window(
         Const(b("🗓️ Расписание")),
         Button(
@@ -214,5 +211,3 @@ dialog = Dialog(
         getter=get_day_schedule_data,
     ),
 )
-
-registered_schedule_router.include_routers(dialog)

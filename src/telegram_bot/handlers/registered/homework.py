@@ -1,6 +1,5 @@
 from typing import Any
 
-from aiogram import Router
 from aiogram.enums import ContentType
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (
@@ -25,8 +24,6 @@ from telegram_bot.buttons.homework import (
 )
 from telegram_bot.utils.html_format import b, blockquote
 from utils.datetime_format import DATE_FORMAT
-
-registered_homework_router = Router(name=__name__)
 
 
 class HomeworkSG(StatesGroup):
@@ -252,7 +249,7 @@ async def get_homework_detail_data(
 
 # --- Диалог ---
 
-dialog = Dialog(
+homework_dialog = Dialog(
     # 1. Меню ДЗ
     Window(
         Const(b(homework_menu_b.text)),
@@ -319,5 +316,3 @@ dialog = Dialog(
         getter=get_homework_detail_data,
     ),
 )
-
-registered_homework_router.include_routers(dialog)
