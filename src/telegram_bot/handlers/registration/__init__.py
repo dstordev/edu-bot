@@ -7,7 +7,7 @@ from db.repositories import DBRepositories
 from telegram_bot.utils.html_format import b
 
 from .dialog import dialog_router
-from .states import UnregisteredSG
+from .states import RegistrationSG
 
 unregistered_router = Router(name=__name__)
 
@@ -20,7 +20,7 @@ async def command_start(
     if not groups:
         await message.answer(b("🐱 Группы еще не указаны, вернитесь немного позже"))
         return
-    await dialog_manager.start(UnregisteredSG.group_token, mode=StartMode.RESET_STACK)
+    await dialog_manager.start(RegistrationSG.group_token, mode=StartMode.RESET_STACK)
 
 
 unregistered_router.include_router(dialog_router)
