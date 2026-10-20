@@ -1,6 +1,6 @@
 import asyncio
 import json
-from datetime import date, datetime
+from datetime import datetime
 
 import aiohttp
 import websockets
@@ -9,13 +9,14 @@ from loguru import logger
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from db.models.tables import ReplacementSchedule, Schedule
+from db.models.tables import ReplacementSchedule
 from db.repositories import DBRepositories
 from telegram_bot.utils.html_format import b, blockquote, code, i
-from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES, TIME_FORMAT
+from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES
 from utils.notify.students import notify_students_by_group
 from utils.timezones import TZ_MOSCOW
 
+from .helpers import process_text_daily_schedule
 from .parser import NonWorkingDayLessonDTO, ParsedLessonDTO, parse_docx_bytes
 from .utils import (
     extract_date_from_filename,
@@ -23,28 +24,6 @@ from .utils import (
     generate_session,
     unpack_yandex_ws,
 )
-
-
-def process_text_daily_schedule(
-    class_schedule: list[Schedule | ReplacementSchedule], day: date, weekday: int
-) -> str:
-    schedule_text_lines = []
-    for class_info in class_schedule:
-        class_start_at: str = format(class_info.class_.start_at, TIME_FORMAT)
-        class_end_at: str = format(class_info.class_.end_at, TIME_FORMAT)
-
-        schedule_text_lines.append(
-            f"{b(class_info.class_.number)}. {code(class_start_at)} - {code(class_end_at)} | "
-            f"{class_info.academic_subject.name} | "
-            f"{class_info.audience.name if class_info.audience else 'Ауд. не указана'} | "
-            f"{class_info.class_type_.name if class_info.class_type_ else 'Тип не указан'}"
-        )
-
-    formatted_date = format(day, DATE_FORMAT)
-    return (
-        f"{b(f'📅 Расписание на {RU_WEEKDAY_NAMES[weekday]} {formatted_date}')}\n\n"
-        f"{'\n'.join(schedule_text_lines)}"
-    )
 
 
 async def save_replacements_for_group(
