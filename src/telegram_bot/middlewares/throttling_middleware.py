@@ -17,7 +17,7 @@ class ThrottlingMiddleware(BaseMiddleware):
         self,
         default_rate: float = 0.7,  # Минимальный интервал между сообщениями (секунды)
         default_key: str | None = None,  # Ключ для группировки (по умолчанию - user_id)
-    ):
+    ) -> None:
         """
         Args:
             default_rate: Минимальный интервал между запросами в секундах

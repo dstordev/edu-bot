@@ -43,7 +43,7 @@ class InfoWindow:
         parse_mode: ParseMode | None = ParseMode.HTML,
         disable_web_page_preview: bool = False,
         media_strategy: MediaStrategy = MediaStrategy.DELETE_AND_SEND,
-    ):
+    ) -> None:
         """
         Args:
             text: Текст сообщения (или caption для медиа)
@@ -390,7 +390,7 @@ class InfoWindow:
 class InfoWindowBuilder:
     """Builder паттерн для создания InfoWindow"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._text: str = ""
         self._keyboard: InlineKeyboardMarkup | None = None
         self._media: InputMedia | None = None

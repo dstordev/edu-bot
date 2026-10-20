@@ -13,7 +13,7 @@ class NonWorkingDayRepository:
     Репозиторий для работы с таблицой учебных групп в базе данных.
     """
 
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     async def is_non_working_day(self, day: date, group_id: int | None = None) -> bool:

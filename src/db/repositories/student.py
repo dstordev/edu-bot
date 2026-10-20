@@ -11,7 +11,7 @@ class StudentRepository:
     Репозиторий для работы с таблицой студентов в базе данных.
     """
 
-    def __init__(self, async_session: AsyncSession):
+    def __init__(self, async_session: AsyncSession) -> None:
         self.async_session = async_session
 
     async def find_by_telegram_id(self, telegram_id: int) -> Student | None:

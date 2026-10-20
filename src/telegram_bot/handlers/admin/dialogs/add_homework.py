@@ -25,21 +25,21 @@ from utils.datetime_format import DATE_FORMAT
 
 
 # Обработчики
-async def on_next(callback: CallbackQuery, button: Button, manager: DialogManager):
+async def on_next(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
     """Обработчик пропуска этапа диалога."""
     await manager.next()
 
 
 async def on_text(
     message: Message, widget: ManagedTextInput[str], manager: DialogManager, data: str
-):
+) -> None:
     """Обработчик ввода текста домашнего задания."""
 
     manager.dialog_data["text"] = data
     await manager.next()
 
 
-async def on_files(message: Message, widget: MessageInput, manager: DialogManager):
+async def on_files(message: Message, widget: MessageInput, manager: DialogManager) -> None:
     """Обработчик ввода фотографий или файлов."""
 
     if manager.dialog_data.get("files") is None:
@@ -54,7 +54,7 @@ async def on_files(message: Message, widget: MessageInput, manager: DialogManage
         files.append({"type": "document", "file_id": file_id})
 
 
-async def on_confirm(callback: CallbackQuery, button: Button, manager: DialogManager):
+async def on_confirm(callback: CallbackQuery, button: Button, manager: DialogManager) -> None:
     """Обработчик подтверждения создания домашнего задания."""
 
     dbrepositories: DBRepositories = manager.middleware_data["dbrepositories"]

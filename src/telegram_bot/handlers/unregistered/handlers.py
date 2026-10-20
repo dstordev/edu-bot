@@ -15,7 +15,7 @@ async def on_group_token(
     widget: ManagedTextInput[str],
     manager: DialogManager,
     data: str,
-):
+) -> None:
     repos: DBRepositories = manager.middleware_data["dbrepositories"]
     if not (group := await repos.group.find_by_token(data)):
         manager.dialog_data["token_not_found"] = True
@@ -30,7 +30,7 @@ async def on_student_name(
     widget: ManagedTextInput[str],
     manager: DialogManager,
     data: str,
-):
+) -> None:
     if not message.from_user:
         logger.warning("Полученное сообщение ожидается от пользователя.")
         return

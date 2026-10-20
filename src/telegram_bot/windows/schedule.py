@@ -19,7 +19,7 @@ class DailyScheduleWindow(InfoWindow):
         day: date,
         weekday: int,
         back_btn: InlineKeyboardButton | None = None,
-    ):
+    ) -> None:
         self.back_btn = back_btn
 
         schedule_text_lines = []
