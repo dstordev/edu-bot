@@ -15,9 +15,7 @@ class AudienceRepository:
         Возвращает информацию об аудитории по заданному id.
         """
 
-        result = await self.async_session.execute(
-            select(Audience).where(Audience.id == _id)
-        )
+        result = await self.async_session.execute(select(Audience).where(Audience.id == _id))
         return result.scalar()
 
     async def get_all(self) -> list[Audience]:
@@ -29,9 +27,7 @@ class AudienceRepository:
     async def add(self, name: str) -> Audience:
         """Добавляет аудиторию в БД и возвращает добавленный объект."""
 
-        r = await self.async_session.execute(
-            insert(Audience).values(name=name).returning(Audience)
-        )
+        r = await self.async_session.execute(insert(Audience).values(name=name).returning(Audience))
         return r.scalar_one()
 
     async def delete_by_id(self, id_: int) -> bool:
@@ -44,7 +40,5 @@ class AudienceRepository:
     async def find_by_name(self, name: str) -> Audience | None:
         """Ищет и возвращает аудиторию по ее имени."""
 
-        r = await self.async_session.execute(
-            select(Audience).where(Audience.name == name)
-        )
+        r = await self.async_session.execute(select(Audience).where(Audience.name == name))
         return r.scalar_one_or_none()

@@ -6,7 +6,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
-from db.models.tables import *
+from db.models.tables import Base
 from settings import settings
 
 # this is the Alembic Config object, which provides

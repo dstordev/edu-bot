@@ -29,13 +29,14 @@ async def on_group_selected(
 
 async def on_date(
     message: Message, widget: ManagedTextInput[str], manager: DialogManager, data: str
-):
+) -> None:
     """Обработчик ввода даты."""
 
     try:
         datetime.strptime(data, DATE_FORMAT).date()  # noqa: DTZ007
     except Exception as ex:
-        return logger.warning(f"Не удалось спарсить введенную дату: {ex}")
+        logger.warning(f"Не удалось спарсить введенную дату: {ex}")
+        return
 
     manager.dialog_data["date"] = data
     await manager.next()

@@ -56,13 +56,9 @@ async def notify_students_by_group_repos(
             # Если включен фильтр рассылки по стуеднтам с включенным reminder_5min
             if filter_enabled_reminder_5min:
                 try:
-                    student_settings = await dbrepositories.student_settings.find(
-                        student.id
-                    )
+                    student_settings = await dbrepositories.student_settings.find(student.id)
                 except Exception as ex:
-                    logger.error(
-                        f"Не удалось выполнить запрос поиска настроек студента: {ex}"
-                    )
+                    logger.error(f"Не удалось выполнить запрос поиска настроек студента: {ex}")
                     # Если ошибка то все равно отправляем сообщение
                 else:
                     if student_settings:
@@ -71,7 +67,8 @@ async def notify_students_by_group_repos(
                             continue
                     else:
                         logger.warning(
-                            f"Для студента {student.id} не удалось найти запись в настройках студенов. На всякий случай отправляем сообщение."
+                            f"Для студента {student.id} не удалось найти запись в настройках "
+                            "студенов. На всякий случай отправляем сообщение."
                         )
 
             try:
@@ -79,21 +76,18 @@ async def notify_students_by_group_repos(
             except TelegramForbiddenError:
                 has_err = True
                 logger.warning(
-                    "[Notify] Не удалось отправить студенту сообщение из-за того, что пользователь заблокировал бота."
+                    "[Notify] Не удалось отправить студенту сообщение из-за того,"
+                    "что пользователь заблокировал бота."
                 )
 
                 # Пытаемся пометить студента как неактивного
                 try:
-                    await dbrepositories.student.mark_activity(
-                        student.id, is_active=False
-                    )
+                    await dbrepositories.student.mark_activity(student.id, is_active=False)
                 except Exception as ex:
                     logger.error(f"Не удалось пометить активность студента: {ex}")
             except AiogramError as ex:
                 has_err = True
-                logger.error(
-                    f"[Notify] При отправке сообщения студенту произошла ошибка: {ex}"
-                )
+                logger.error(f"[Notify] При отправке сообщения студенту произошла ошибка: {ex}")
         else:
             has_err = True
 

@@ -9,14 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from db.models.tables import ReplacementSchedule, Schedule
 from db.repositories import DBRepositories
 from db.services.working_days import is_non_working_day_and_no_schedule
-from telegram_bot.windows.registered import (
-    InfoWindow,
-    notification_end_at_window,
-    notification_start_at_window,
-)
 from utils.notify.students import notify_students_by_group_repos
 from utils.schedule import get_week_stars
 from utils.timezones import TZ_MOSCOW
+
+from .helpers import process_text_notification_end_at, process_text_notification_start_at
 
 ScheduleItem = ReplacementSchedule | Schedule
 
@@ -54,9 +51,7 @@ class ScheduleNotifier:
         async with self.__async_sessionmaker() as session:
             repos = DBRepositories(session)
 
-            if await is_non_working_day_and_no_schedule(
-                day=target_date, dbrepositories=repos
-            ):
+            if await is_non_working_day_and_no_schedule(day=target_date, dbrepositories=repos):
                 return
 
             replacement_groups = await self.find_group_ids_in_replacement_schedules(
@@ -65,28 +60,24 @@ class ScheduleNotifier:
 
             schedules: list[tuple[ScheduleItem, ScheduleItem | None]] = []
             schedules.extend(
-                await self.find_schedules(
-                    target_date, target_time, replacement_groups, repos
-                )
+                await self.find_schedules(target_date, target_time, replacement_groups, repos)
             )
 
             if replacement_groups:
                 schedules.extend(
-                    await self.find_replacement_schedules(
-                        target_date, target_time, repos
-                    )
+                    await self.find_replacement_schedules(target_date, target_time, repos)
                 )
 
             if not schedules:
                 return
 
-            for group_id, window in self.prepare_student_data_notification(
+            for group_id, notification_text in self.prepare_student_data_notification(
                 schedules, repos, target_time
             ):
                 logger.debug(f"Запускаю уведомление группы {group_id} о расписании...")
                 total, failed = await notify_students_by_group_repos(
                     group_id,
-                    window.text,
+                    notification_text,
                     repos,
                     self.__bot,
                     filter_enabled_reminder_5min=True,
@@ -137,9 +128,7 @@ class ScheduleNotifier:
         """Ищет пары по заменам, граничащие с указанным временем."""
 
         result: list[tuple[ReplacementSchedule, ReplacementSchedule | None]] = []
-        lessons = await repos.replacement_schedule.get_lessons_by_boundary_time(
-            day, time_
-        )
+        lessons = await repos.replacement_schedule.get_lessons_by_boundary_time(day, time_)
 
         for item in lessons:
             next_lesson = None
@@ -157,22 +146,22 @@ class ScheduleNotifier:
         targets: list[tuple[ScheduleItem, ScheduleItem | None]],
         repos: DBRepositories,
         target_time: time,
-    ) -> Generator[tuple[int, InfoWindow]]:
-        """Формирует список сообщений (окон) для рассылки студентам."""
+    ) -> Generator[tuple[int, str]]:
+        """Формирует список сообщений для рассылки студентам."""
 
         for schedule, next_schedule in targets:
             cls = schedule.class_
             is_start = cls.start_at == target_time
 
-            window = (
-                notification_start_at_window(
+            notification_text = (
+                process_text_notification_start_at(
                     cls.number,
                     schedule.academic_subject.name,
                     cls.start_at,
                     schedule.audience.name if schedule.audience else None,
                 )
                 if is_start
-                else notification_end_at_window(
+                else process_text_notification_end_at(
                     cls.number,
                     schedule.academic_subject.name,
                     cls.end_at,
@@ -180,4 +169,4 @@ class ScheduleNotifier:
                     next_schedule,
                 )
             )
-            yield schedule.group_id, window
+            yield schedule.group_id, notification_text

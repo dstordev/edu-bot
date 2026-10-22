@@ -1,7 +1,6 @@
 from datetime import date, datetime, timedelta
 from typing import Any
 
-from aiogram import Router
 from aiogram.enums import ButtonStyle
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery
@@ -20,8 +19,6 @@ from telegram_bot.buttons.schedule import (
 from telegram_bot.utils.html_format import b, code, i
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES, TIME_FORMAT
 from utils.timezones import TZ_MOSCOW
-
-registered_schedule_router = Router(name=__name__)
 
 
 class ScheduleSG(StatesGroup):
@@ -88,7 +85,8 @@ async def on_day_schedule(
     item_id: str | None = None,
 ) -> None:
     """
-    Универсальный хэндлер: работает и для Button ('today'/'tomorrow'), и для Select (конкретная дата).
+    Универсальный хэндлер: работает и для Button ('today'/'tomorrow'),
+    и для Select (конкретная дата).
     """
 
     selected_day = item_id or widget.widget_id
@@ -120,15 +118,15 @@ async def on_day_schedule(
 # --- Геттеры данных ---
 
 
-async def get_day_schedule_data(dialog_manager: DialogManager, **kwargs: dict) -> dict:
+async def get_day_schedule_data(dialog_manager: DialogManager, **kwargs: Any) -> dict[str, Any]:
     return {"schedule_text": dialog_manager.dialog_data["day_schedule_text"]}
 
 
 async def get_week_schedule_data(
     dialog_manager: DialogManager,
     dbrepositories: DBRepositories,
-    **kwargs: dict,
-) -> dict:
+    **kwargs: Any,
+) -> dict[str, Any]:
     group_id = await get_student_group_id(dialog_manager, dbrepositories)
     selected_week = dialog_manager.dialog_data.get("selected_week", "current_week")
 
@@ -162,7 +160,7 @@ async def get_week_schedule_data(
 
 # --- Диалог ---
 
-dialog = Dialog(
+schedule_dialog = Dialog(
     Window(
         Const(b("🗓️ Расписание")),
         Button(
@@ -214,5 +212,3 @@ dialog = Dialog(
         getter=get_day_schedule_data,
     ),
 )
-
-registered_schedule_router.include_routers(dialog)

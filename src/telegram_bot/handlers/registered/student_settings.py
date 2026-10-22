@@ -1,26 +1,16 @@
-from aiogram import F, Router
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import CallbackQuery, User
-from aiogram_dialog import Dialog, DialogManager, StartMode, Window
+from aiogram_dialog import Dialog, DialogManager, Window
 from aiogram_dialog.widgets.kbd import Cancel, Checkbox, ManagedCheckbox
 from aiogram_dialog.widgets.text import Const
 from loguru import logger
 
 from db.repositories import DBRepositories
-from telegram_bot.buttons.other import student_settings_b
 from telegram_bot.utils.html_format import b, i
 
 
 class StudentSettingsSG(StatesGroup):
     main = State()
-
-
-student_settings_router = Router(name=__name__)
-
-
-@student_settings_router.callback_query(F.data == student_settings_b.callback_data)
-async def student_settings_menu(callback: CallbackQuery, dialog_manager: DialogManager) -> None:
-    await dialog_manager.start(StudentSettingsSG.main, mode=StartMode.RESET_STACK)
 
 
 async def on_dialog_start(start_data: dict | None, manager: DialogManager) -> None:
@@ -82,5 +72,3 @@ student_settings_dialog = Dialog(
     ),
     on_start=on_dialog_start,
 )
-
-student_settings_router.include_router(student_settings_dialog)

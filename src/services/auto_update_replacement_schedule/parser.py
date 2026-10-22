@@ -49,9 +49,7 @@ def parse_docx_bytes(
                 if "(" in text and ")" in text:
                     try:
                         date_part = text.split("(")[1].split(")")[0].strip()
-                        dt = dateparser.parse(
-                            " ".join(date_part.split()[:3]), languages=["ru"]
-                        )
+                        dt = dateparser.parse(" ".join(date_part.split()[:3]), languages=["ru"])
                         if dt:
                             schedule_date = dt.date()
                             break
@@ -84,9 +82,7 @@ def parse_docx_bytes(
                 if " (" in subject_cell:
                     subject_parts = subject_cell.split(" (")
                     subject_name = subject_parts[0].strip()
-                    class_type_name = (
-                        subject_parts[1].replace(")", "").replace(",", "").strip()
-                    )
+                    class_type_name = subject_parts[1].replace(")", "").replace(",", "").strip()
                 else:
                     subject_name = subject_cell.strip()
                     if "День самостоятельной работы" in subject_name:

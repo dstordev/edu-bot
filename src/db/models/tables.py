@@ -22,10 +22,10 @@ class TIME_HM(TypeDecorator):
     impl = Time
     cache_ok = True
 
-    def process_bind_param(self, value: time | Any, dialect) -> time | None:
+    def process_bind_param(self, value: time | Any, dialect: Any) -> time | None:
         return value.replace(second=0, microsecond=0)
 
-    def process_result_value(self, value: time | Any, dialect) -> time | None:
+    def process_result_value(self, value: time | Any, dialect: Any) -> time | None:
         return value.replace(second=0, microsecond=0)
 
 
@@ -55,9 +55,7 @@ class Student(Base):
     patronymic: Mapped[str | None] = mapped_column(String(30))
     group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
     is_active: Mapped[bool] = mapped_column(server_default=sa.true())
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -83,9 +81,7 @@ class Group(Base):
     token: Mapped[str] = mapped_column(
         String(5), unique=True, server_default=text("generate_group_token()")
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class AcademicSubject(Base):
@@ -93,9 +89,7 @@ class AcademicSubject(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(256), unique=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Class(Base):
@@ -103,16 +97,10 @@ class Class(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     number: Mapped[int]
-    start_at: Mapped[time] = mapped_column(
-        TIME_HM
-    )  # time in iso 8601 format up to minutes
-    end_at: Mapped[time] = mapped_column(
-        TIME_HM
-    )  # time in iso 8601 format up to minutes
+    start_at: Mapped[time] = mapped_column(TIME_HM)  # time in iso 8601 format up to minutes
+    end_at: Mapped[time] = mapped_column(TIME_HM)  # time in iso 8601 format up to minutes
 
-    __table_args__ = (
-        UniqueConstraint("start_at", "end_at", name="uq_class_start_at_end_at"),
-    )
+    __table_args__ = (UniqueConstraint("start_at", "end_at", name="uq_class_start_at_end_at"),)
 
 
 class _ScheduleMixin:
@@ -182,9 +170,7 @@ class NonWorkingDay(Base):
     day: Mapped[date]
     group_id: Mapped[int | None] = mapped_column(ForeignKey("group.id"))
 
-    __table_args__ = (
-        UniqueConstraint("day", "group_id", name="uq_non_working_day_day_group_id"),
-    )
+    __table_args__ = (UniqueConstraint("day", "group_id", name="uq_non_working_day_day_group_id"),)
 
 
 class Homework(Base):
@@ -209,9 +195,7 @@ class StudentHomework(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     student_id: Mapped[int] = mapped_column(ForeignKey("student.id"))
     homework_id: Mapped[int] = mapped_column(ForeignKey("homework.id"))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     __table_args__ = (
         UniqueConstraint(
@@ -227,9 +211,7 @@ class _HomeworkFileMixin:
     # homework_id и telegram_file_id связаны UniqueConstraint в дочерних классах
     homework_id: Mapped[int] = mapped_column(ForeignKey("homework.id"))
     telegram_file_id: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class HomeworkPhoto(_HomeworkFileMixin, Base):

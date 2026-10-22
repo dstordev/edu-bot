@@ -18,8 +18,9 @@ class NonWorkingDayRepository:
 
     async def is_non_working_day(self, day: date, group_id: int | None = None) -> bool:
         """
-        group_id - Если в значение передан `None`, то функция вернет общие нерабочие дни, для которых не указана группа,
-        а если id группы указан, то функция вернет нерабочие дни для конкретной группы.
+        group_id - Если в значение передан `None`, то функция вернет общие нерабочие дни,
+        для которых не указана группа, а если id группы указан,
+        то функция вернет нерабочие дни для конкретной группы.
         """
         result = await self.async_session.execute(
             select(NonWorkingDay).where(
@@ -40,9 +41,7 @@ class NonWorkingDayRepository:
         Если в group_id передан None, то нерабочий день считается как общий.
         """
         r = await self.async_session.execute(
-            insert(NonWorkingDay)
-            .values(day=day, group_id=group_id)
-            .returning(NonWorkingDay)
+            insert(NonWorkingDay).values(day=day, group_id=group_id).returning(NonWorkingDay)
         )
         return r.scalar_one()
 

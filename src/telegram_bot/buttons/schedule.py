@@ -1,14 +1,9 @@
 from datetime import date
 
-from aiogram.enums.button_style import ButtonStyle
 from aiogram.types import InlineKeyboardButton
 
 from telegram_bot.utils.text_format import strike
 from utils.datetime_format import DATE_FORMAT, RU_WEEKDAY_NAMES
-
-class_schedule_b = InlineKeyboardButton(
-    text="🗓️ Расписание", callback_data="class_schedule", style=ButtonStyle.PRIMARY
-)
 
 
 def class_schedule_onday_b(

@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Any
 
 from aiogram.types import CallbackQuery
 from aiogram_dialog import Dialog, DialogManager, Window
@@ -19,7 +20,7 @@ from utils.datetime_format import DATE_FORMAT
 
 
 # === Геттеры ===
-async def get_classes(dbrepositories: DBRepositories, **kwargs):
+async def get_classes(dbrepositories: DBRepositories, **kwargs: Any) -> dict[str, Any]:
     """Геттер для получения номеров пар."""
 
     classes = await dbrepositories.class_.get_classes()
@@ -36,7 +37,7 @@ async def get_classes(dbrepositories: DBRepositories, **kwargs):
     }
 
 
-async def get_class_types(dbrepositories: DBRepositories, **kwargs):
+async def get_class_types(dbrepositories: DBRepositories, **kwargs: Any) -> dict[str, Any]:
     """Геттер для получения типов пар."""
 
     class_types = await dbrepositories.class_type.get_all()
@@ -47,14 +48,12 @@ async def get_class_types(dbrepositories: DBRepositories, **kwargs):
     }
 
 
-async def get_audiences(dbrepositories: DBRepositories, **kwargs):
+async def get_audiences(dbrepositories: DBRepositories, **kwargs: Any) -> dict[str, Any]:
     """Геттер для получения аудиторий."""
 
     audiences = await dbrepositories.audience.get_all()
     return {
-        "audiences": [
-            {"id": audience.id, "name": audience.name} for audience in audiences
-        ],
+        "audiences": [{"id": audience.id, "name": audience.name} for audience in audiences],
     }
 
 

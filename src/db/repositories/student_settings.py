@@ -10,9 +10,7 @@ class StudentSettingsRepository:
 
     async def add(self, student_id: int) -> StudentSettings:
         r = await self.async_session.execute(
-            insert(StudentSettings)
-            .values(student_id=student_id)
-            .returning(StudentSettings)
+            insert(StudentSettings).values(student_id=student_id).returning(StudentSettings)
         )
         return r.scalar_one()
 

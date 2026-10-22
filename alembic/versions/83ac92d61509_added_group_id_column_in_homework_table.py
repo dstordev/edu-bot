@@ -26,7 +26,8 @@ def upgrade() -> None:
     """Upgrade schema."""
     conn = op.get_bind()
 
-    # Создаем группу, где хранятся общие домашние задания, чтобы в будущем использовать нормальное разделение ДЗ по группам
+    # Создаем группу, где хранятся общие домашние задания,
+    # чтобы в будущем использовать нормальное разделение ДЗ по группам.
     r = conn.execute(
         sa.text(
             """INSERT INTO "group" ("name") VALUES ('common-homework') RETURNING "group"."id";"""
@@ -37,17 +38,13 @@ def upgrade() -> None:
         "homework",
         sa.Column("group_id", sa.Integer, nullable=False, default=created_group_id),
     )
-    op.create_foreign_key(
-        "homework_group_id_fkey", "homework", "group", ["group_id"], ["id"]
-    )
+    op.create_foreign_key("homework_group_id_fkey", "homework", "group", ["group_id"], ["id"])
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     conn = op.get_bind()
-    r = conn.execute(
-        sa.text("""SELECT "id" FROM "group" WHERE "name" = 'common-homework';""")
-    )
+    r = conn.execute(sa.text("""SELECT "id" FROM "group" WHERE "name" = 'common-homework';"""))
     created_group_id: int = r.scalar_one()
 
     op.execute(f"""DELETE FROM "group" WHERE "id" = {created_group_id};""")

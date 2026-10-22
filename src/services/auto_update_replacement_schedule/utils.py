@@ -22,9 +22,7 @@ def unpack_yandex_ws(raw: bytes) -> tuple[str, dict | None]:
         unpacker.feed(raw[1:])
         header = unpacker.unpack()
 
-        msg_type = (
-            header[2] if isinstance(header, list) and len(header) > 2 else "unknown"
-        )
+        msg_type = header[2] if isinstance(header, list) and len(header) > 2 else "unknown"
         header_end_offset = 1 + unpacker.tell()
 
     except Exception:

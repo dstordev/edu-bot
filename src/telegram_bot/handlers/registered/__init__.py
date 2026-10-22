@@ -2,10 +2,10 @@ from aiogram import Router
 
 from telegram_bot.filters import IsRegisteredUserFilter
 
-from .homework import registered_homework_router
+from .homework import homework_dialog
 from .main_menu import main_menu_dialog
-from .schedule import registered_schedule_router
-from .student_settings import student_settings_router
+from .schedule import schedule_dialog
+from .student_settings import student_settings_dialog
 
 registered_router = Router()
 registered_router.message.filter(IsRegisteredUserFilter())
@@ -13,9 +13,9 @@ registered_router.callback_query.filter(IsRegisteredUserFilter())
 
 registered_router.include_routers(
     main_menu_dialog,
-    registered_schedule_router,
-    registered_homework_router,
-    student_settings_router,
+    schedule_dialog,
+    homework_dialog,
+    student_settings_dialog,
 )
 
 __all__ = ["registered_router"]

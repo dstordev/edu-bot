@@ -41,9 +41,7 @@ class StudentRepository:
             raise Exception("Возвращаемое значение не может быть None.")
 
     async def find(self, student_id: int) -> Student | None:
-        result = await self.async_session.execute(
-            select(Student).where(Student.id == student_id)
-        )
+        result = await self.async_session.execute(select(Student).where(Student.id == student_id))
         return result.scalar()
 
     async def find_students_by_group(self, group_id: int) -> AsyncGenerator[Student]:
