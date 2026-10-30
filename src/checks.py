@@ -5,7 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 
-async def check_redis_connection(host: str, port: int) -> bool:
+async def ping_redis(host: str, port: int) -> bool:
     try:
         if await Redis(host=host, port=port).ping():
             return True
@@ -14,7 +14,7 @@ async def check_redis_connection(host: str, port: int) -> bool:
     return False
 
 
-async def check_postgres_connection(
+async def ping_postgres(
     async_session_maker: async_sessionmaker[AsyncSession],
 ) -> bool:
     try:

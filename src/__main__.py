@@ -13,7 +13,7 @@ from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
 from redis.asyncio import Redis
 
-from checks import check_postgres_connection, check_redis_connection
+from checks import ping_postgres, ping_redis
 from db.connect import async_sessmaker
 from metadata import VERSION
 from services.auto_update_replacement_schedule.service import check_schedule_updates
@@ -72,11 +72,11 @@ async def on_shutdown() -> None:
 async def main() -> None:
     # Проверки перед запуском
     logger.debug("Проверяю подключение к postgres...")
-    if not await check_postgres_connection(async_sessmaker):
+    if not await ping_postgres(async_sessmaker):
         return logger.warning("Не удалось подключится к postgres.")
 
     logger.debug("Проверяю подключение к REDIS...")
-    if not await check_redis_connection(host=settings.REDIS_HOST, port=settings.REDIS_PORT):
+    if not await ping_redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT):
         return logger.warning("Не удалось подключится к redis.")
 
     redis_client = Redis(host=settings.REDIS_HOST, port=settings.REDIS_PORT)
